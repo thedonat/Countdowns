@@ -62,24 +62,24 @@ struct CalendarView: View {
                     .clipShape(RoundedRectangle(cornerRadius: 16))
                     .shadow(color: Color.black.opacity(0.1), radius: 5, x: 0, y: 2)
 
-                    // Selected Date Events
+                    // All Events
                     VStack(alignment: .leading, spacing: 16) {
-                        Text("\(DateFormatter.monthDay.string(from: selectedDate)) Events")
+                        Text("All Events")
                             .font(.title2)
                             .fontWeight(.bold)
                             .padding(.horizontal)
 
-                        let selectedEvents = eventStore.events(for: selectedDate)
+                        let allEvents = eventStore.sortedEvents
 
-                        if selectedEvents.isEmpty {
-                            Text("No events on this date")
+                        if allEvents.isEmpty {
+                            Text("No events")
                                 .font(.subheadline)
                                 .foregroundColor(.secondary)
                                 .padding(.horizontal)
                         } else {
                             LazyVStack(spacing: 12) {
-                                ForEach(selectedEvents) { event in
-                                    SelectedDateEventRow(event: event)
+                                ForEach(allEvents) { event in
+                                    AllEventsRow(event: event, isSelectedDate: calendar.isDate(event.date, inSameDayAs: selectedDate))
                                 }
                             }
                             .padding(.horizontal)
@@ -231,8 +231,9 @@ struct CalendarDayView: View {
     }
 }
 
-struct SelectedDateEventRow: View {
+struct AllEventsRow: View {
     let event: Event
+    let isSelectedDate: Bool
     @State private var timeRemaining: TimeInterval = 0
 
     var body: some View {
@@ -249,37 +250,49 @@ struct SelectedDateEventRow: View {
                     .font(.system(size: 15, weight: .semibold))
                     .foregroundColor(.primary)
 
-                Text(DateFormatter.abbreviatedTime.string(from: event.date))
+                Text(DateFormatter.monthDay.string(from: event.date))
                     .font(.system(size: 12))
                     .foregroundColor(.secondary)
             }
 
             Spacer()
 
-            if timeRemaining > 0 {
-                let components = timeComponents(for: event)
-                HStack(spacing: 2) {
-                    if components.days > 0 {
-                        Text("\(components.days)d")
-                    } else if components.hours > 0 {
-                        Text("\(components.hours)h")
-                    } else if components.minutes > 0 {
-                        Text("\(components.minutes)m")
-                    } else {
-                        Text("Today")
+            VStack(alignment: .trailing, spacing: 2) {
+                if timeRemaining > 0 {
+                    let components = timeComponents(for: event)
+                    HStack(spacing: 2) {
+                        if components.days > 0 {
+                            Text("\(components.days)d")
+                        } else if components.hours > 0 {
+                            Text("\(components.hours)h")
+                        } else if components.minutes > 0 {
+                            Text("\(components.minutes)m")
+                        } else {
+                            Text("Today")
+                        }
                     }
-                }
-                .font(.system(size: 12, weight: .medium))
-                .foregroundColor(.secondary)
-            } else {
-                Text("Today")
                     .font(.system(size: 12, weight: .medium))
-                    .foregroundColor(categoryColor)
+                    .foregroundColor(.secondary)
+                } else {
+                    Text("Today")
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundColor(categoryColor)
+                }
+
+                if isSelectedDate {
+                    Text("Selected")
+                        .font(.system(size: 10, weight: .medium))
+                        .foregroundColor(categoryColor)
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 2)
+                        .background(categoryColor.opacity(0.2))
+                        .clipShape(Capsule())
+                }
             }
         }
         .padding(.vertical, 8)
         .padding(.horizontal, 12)
-        .background(Color(.systemGray6))
+        .background(isSelectedDate ? categoryColor.opacity(0.1) : Color(.systemGray6))
         .clipShape(RoundedRectangle(cornerRadius: 10))
         .onAppear {
             updateTimeRemaining()
