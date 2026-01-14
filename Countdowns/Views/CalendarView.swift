@@ -61,7 +61,30 @@ struct CalendarView: View {
                     .background(Color(.systemBackground))
                     .clipShape(RoundedRectangle(cornerRadius: 16))
                     .shadow(color: Color.black.opacity(0.1), radius: 5, x: 0, y: 2)
-                    
+
+                    // Selected Date Events
+                    VStack(alignment: .leading, spacing: 16) {
+                        Text("\(DateFormatter.monthDay.string(from: selectedDate)) Events")
+                            .font(.title2)
+                            .fontWeight(.bold)
+                            .padding(.horizontal)
+
+                        let selectedEvents = eventStore.events(for: selectedDate)
+
+                        if selectedEvents.isEmpty {
+                            Text("No events on this date")
+                                .font(.subheadline)
+                                .foregroundColor(.secondary)
+                                .padding(.horizontal)
+                        } else {
+                            LazyVStack(spacing: 12) {
+                                ForEach(selectedEvents) { event in
+                                    SelectedDateEventRow(event: event)
+                                }
+                            }
+                            .padding(.horizontal)
+                        }
+                    }
                 }
                 .padding()
             }
@@ -182,6 +205,95 @@ struct CalendarDayView: View {
             .clipShape(Circle())
         }
         .opacity(isCurrentMonth ? 1 : 0.3)
+    }
+}
+
+struct SelectedDateEventRow: View {
+    let event: Event
+    @State private var timeRemaining: TimeInterval = 0
+
+    var body: some View {
+        HStack(spacing: 12) {
+            Image(systemName: event.category.icon)
+                .font(.system(size: 16))
+                .foregroundColor(.white)
+                .frame(width: 32, height: 32)
+                .background(categoryColor)
+                .clipShape(RoundedRectangle(cornerRadius: 8))
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text(event.name)
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundColor(.primary)
+
+                Text(DateFormatter.abbreviatedTime.string(from: event.date))
+                    .font(.system(size: 12))
+                    .foregroundColor(.secondary)
+            }
+
+            Spacer()
+
+            if timeRemaining > 0 {
+                let components = timeComponents(for: event)
+                HStack(spacing: 2) {
+                    if components.days > 0 {
+                        Text("\(components.days)d")
+                    } else if components.hours > 0 {
+                        Text("\(components.hours)h")
+                    } else if components.minutes > 0 {
+                        Text("\(components.minutes)m")
+                    } else {
+                        Text("Today")
+                    }
+                }
+                .font(.system(size: 12, weight: .medium))
+                .foregroundColor(.secondary)
+            } else {
+                Text("Today")
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundColor(categoryColor)
+            }
+        }
+        .padding(.vertical, 8)
+        .padding(.horizontal, 12)
+        .background(Color(.systemGray6))
+        .clipShape(RoundedRectangle(cornerRadius: 10))
+        .onAppear {
+            updateTimeRemaining()
+        }
+        .onReceive(Timer.publish(every: 1, on: .main, in: .common).autoconnect()) { _ in
+            updateTimeRemaining()
+        }
+    }
+
+    private func updateTimeRemaining() {
+        timeRemaining = event.timeRemaining
+    }
+
+    private func timeComponents(for event: Event) -> (days: Int, hours: Int, minutes: Int) {
+        let seconds = Int(event.timeRemaining)
+        guard seconds > 0 else {
+            return (0, 0, 0)
+        }
+
+        let days = seconds / 86400
+        let hours = (seconds % 86400) / 3600
+        let minutes = (seconds % 3600) / 60
+
+        return (days, hours, minutes)
+    }
+
+    private var categoryColor: Color {
+        switch event.category {
+        case .birthday: return Color.pink
+        case .travel: return Color.blue
+        case .event: return Color.purple
+        case .wedding: return Color.red
+        case .holiday: return Color.orange
+        case .anniversary: return Color.green
+        case .payment: return Color.yellow
+        case .other: return Color.gray
+        }
     }
 }
 
