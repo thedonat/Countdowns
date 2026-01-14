@@ -196,15 +196,15 @@ struct EventCard: View {
 
     private func cardBackgroundColor(for category: EventCategory) -> Color {
         switch category.color {
-        case "pink": return Color(red: 0.35, green: 0.25, blue: 0.45) // Dark purple-pink
-        case "blue": return Color(red: 0.15, green: 0.25, blue: 0.4) // Dark blue
-        case "purple": return Color(red: 0.3, green: 0.25, blue: 0.4) // Dark purple
-        case "red": return Color(red: 0.45, green: 0.2, blue: 0.25) // Dark red-pink
-        case "orange": return Color(red: 0.4, green: 0.3, blue: 0.15) // Dark orange
-        case "green": return Color(red: 0.15, green: 0.4, blue: 0.35) // Dark teal-green
-        case "yellow": return Color(red: 0.4, green: 0.35, blue: 0.15) // Dark yellow
-        case "gray": return Color(red: 0.3, green: 0.3, blue: 0.3) // Dark gray
-        default: return Color(red: 0.3, green: 0.3, blue: 0.3) // Default gray
+        case "pink": return Color(red: 0.35, green: 0.25, blue: 0.45).opacity(0.8)
+        case "blue": return Color(red: 0.15, green: 0.25, blue: 0.4).opacity(0.8)
+        case "purple": return Color(red: 0.3, green: 0.25, blue: 0.4).opacity(0.8)
+        case "red": return Color(red: 0.45, green: 0.2, blue: 0.25).opacity(0.8)
+        case "orange": return Color(red: 0.4, green: 0.3, blue: 0.15).opacity(0.8)
+        case "green": return Color(red: 0.15, green: 0.4, blue: 0.35).opacity(0.8)
+        case "yellow": return Color(red: 0.4, green: 0.35, blue: 0.15).opacity(0.8)
+        case "gray": return Color(red: 0.3, green: 0.3, blue: 0.3).opacity(0.8)
+        default: return Color(red: 0.3, green: 0.3, blue: 0.3).opacity(0.8)
         }
     }
     
