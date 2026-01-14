@@ -169,8 +169,7 @@ struct CalendarGridView: View {
     
     private func hasEvent(on date: Date) -> Bool {
         events.contains { event in
-            calendar.isDate(event.date, inSameDayAs: date) &&
-            shouldShowEvent(event)
+            calendar.isDate(event.date, inSameDayAs: date)
         }
     }
 
@@ -271,18 +270,12 @@ struct SelectedDateEventRow: View {
                         Text("\(components.days)d")
                     } else if components.hours > 0 {
                         Text("\(components.hours)h")
-                    } else if components.minutes > 0 {
-                        Text("\(components.minutes)m")
                     } else {
-                        Text("Today")
+                        Text("\(components.minutes)m")
                     }
                 }
                 .font(.system(size: 12, weight: .medium))
                 .foregroundColor(.secondary)
-            } else {
-                Text("Today")
-                    .font(.system(size: 12, weight: .medium))
-                    .foregroundColor(categoryColor)
             }
         }
         .padding(.vertical, 8)

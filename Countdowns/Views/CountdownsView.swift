@@ -256,11 +256,6 @@ struct EventCard: View {
                     CountdownBox(value: minutes, label: "Mins", color: categoryColor(for: event.category))
                     CountdownBox(value: seconds, label: "Secs", color: categoryColor(for: event.category))
                 }
-            } else {
-                Text("Today")
-                    .font(.headline)
-                    .foregroundColor(categoryColor(for: event.category))
-                    .padding(.vertical, 8)
             }
             
             // Date
