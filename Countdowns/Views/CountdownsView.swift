@@ -193,6 +193,57 @@ struct EventCard: View {
     @Environment(\.colorScheme) var colorScheme
     @State private var timeRemaining: TimeInterval = 0
     @State private var showDeleteAlert = false
+
+    private var cardBackgroundColor: Color {
+        let isDark = colorScheme == .dark
+
+        switch event.category {
+        case .birthday:
+            return isDark ?
+                Color(red: 0.4, green: 0.3, blue: 0.5) : // Dark: Rich purple-pink
+                Color(red: 0.95, green: 0.85, blue: 0.95) // Light: Soft lavender
+
+        case .travel:
+            return isDark ?
+                Color(red: 0.25, green: 0.35, blue: 0.5) : // Dark: Deep ocean blue
+                Color(red: 0.85, green: 0.9, blue: 0.95) // Light: Sky blue
+
+        case .event:
+            return isDark ?
+                Color(red: 0.35, green: 0.3, blue: 0.5) : // Dark: Deep purple
+                Color(red: 0.9, green: 0.85, blue: 0.95) // Light: Light purple
+
+        case .wedding:
+            return isDark ?
+                Color(red: 0.5, green: 0.25, blue: 0.35) : // Dark: Deep rose
+                Color(red: 0.95, green: 0.85, blue: 0.9) // Light: Soft pink
+
+        case .holiday:
+            return isDark ?
+                Color(red: 0.5, green: 0.4, blue: 0.2) : // Dark: Warm amber
+                Color(red: 0.95, green: 0.9, blue: 0.8) // Light: Cream
+
+        case .anniversary:
+            return isDark ?
+                Color(red: 0.2, green: 0.5, blue: 0.4) : // Dark: Deep teal
+                Color(red: 0.85, green: 0.95, blue: 0.9) // Light: Mint green
+
+        case .family:
+            return isDark ?
+                Color(red: 0.4, green: 0.3, blue: 0.5) : // Dark: Rich purple-pink
+                Color(red: 0.95, green: 0.85, blue: 0.95) // Light: Soft lavender
+
+        case .payment:
+            return isDark ?
+                Color(red: 0.5, green: 0.45, blue: 0.2) : // Dark: Golden brown
+                Color(red: 0.95, green: 0.95, blue: 0.8) // Light: Pale yellow
+
+        case .other:
+            return isDark ?
+                Color(red: 0.4, green: 0.4, blue: 0.4) : // Dark: Medium gray
+                Color(red: 0.9, green: 0.9, blue: 0.9) // Light: Light gray
+        }
+    }
     
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -282,7 +333,7 @@ struct EventCard: View {
             }
         }
         .padding()
-        .background(cardBackgroundColor(for: event.category))
+        .background(cardBackgroundColor)
         .clipShape(RoundedRectangle(cornerRadius: 16))
         .onAppear {
             updateTimeRemaining()
@@ -320,19 +371,6 @@ struct EventCard: View {
         }
     }
     
-    private func cardBackgroundColor(for category: EventCategory) -> Color {
-        switch category {
-        case .birthday: return Color(red: 0.35, green: 0.25, blue: 0.45) // Dark purple-pink
-        case .travel: return Color(red: 0.15, green: 0.25, blue: 0.4) // Dark blue
-        case .event: return Color(red: 0.3, green: 0.25, blue: 0.4) // Dark purple
-        case .wedding: return Color(red: 0.45, green: 0.2, blue: 0.25) // Dark red-pink
-        case .holiday: return Color(red: 0.4, green: 0.3, blue: 0.15) // Dark orange
-        case .anniversary: return Color(red: 0.15, green: 0.4, blue: 0.35) // Dark teal-green
-        case .family: return Color(red: 0.35, green: 0.25, blue: 0.45) // Dark purple-pink
-        case .payment: return Color(red: 0.4, green: 0.35, blue: 0.15) // Dark yellow
-        case .other: return Color(red: 0.3, green: 0.3, blue: 0.3) // Dark gray
-        }
-    }
 }
 
 struct CountdownBox: View {
