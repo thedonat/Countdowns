@@ -317,23 +317,23 @@ struct UpcomingEventsWidgetView: View {
             } else {
                 let firstCategoryColor = categoryColor(for: entry.upcomingEvents.first!.category)
 
-                VStack(alignment: .leading, spacing: 8) {
+                VStack(alignment: .leading, spacing: 4) {
                     // Header
                     Text("UPCOMING EVENTS")
-                        .font(.system(size: 9, weight: .bold))
+                        .font(.system(size: 8, weight: .bold))
                         .foregroundColor(.secondary)
                         .textCase(.uppercase)
-                        .padding(.horizontal, 8)
-                        .padding(.top, 8)
+                        .padding(.horizontal, 6)
+                        .padding(.top, 6)
 
                     // Events list - max 3 events
-                    VStack(spacing: 6) {
+                    VStack(spacing: 4) {
                         ForEach(entry.upcomingEvents.prefix(3)) { event in
                             UpcomingEventRowView(event: event)
                         }
                     }
-                    .padding(.horizontal, 8)
-                    .padding(.bottom, 8)
+                    .padding(.horizontal, 6)
+                    .padding(.bottom, 6)
                 }
                 .containerBackground(for: .widget) {
                     LinearGradient(
@@ -355,44 +355,44 @@ private struct UpcomingEventRowView: View {
         let categoryColor = categoryColor(for: event.category)
         let (value, label) = primaryCountdownForList(for: event)
 
-        HStack(spacing: 12) {
+        HStack(spacing: 8) {
             // Icon in circle
             Image(systemName: event.category.icon)
-                .font(.system(size: 16))
+                .font(.system(size: 14))
                 .foregroundColor(.white)
-                .frame(width: 36, height: 36)
+                .frame(width: 32, height: 32)
                 .background(categoryColor)
                 .clipShape(Circle())
 
             // Event name and date
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: 1) {
                 Text(event.name)
-                    .font(.system(size: 15, weight: .semibold))
+                    .font(.system(size: 13, weight: .semibold))
                     .foregroundColor(.white)
-                    .lineLimit(2)
+                    .lineLimit(1)
                     .minimumScaleFactor(0.8)
 
                 Text(DateFormatter.widgetMonthDay.string(from: event.date))
-                    .font(.system(size: 12))
+                    .font(.system(size: 10))
                     .foregroundColor(.white.opacity(0.7))
             }
 
-            Spacer(minLength: 4)
+            Spacer(minLength: 2)
 
             // Countdown value
-            HStack(spacing: 4) {
+            HStack(spacing: 2) {
                 Text("\(value)")
-                    .font(.system(size: 22, weight: .bold))
+                    .font(.system(size: 18, weight: .bold))
                     .foregroundColor(categoryColor)
                     .minimumScaleFactor(0.7)
 
                 Text(label)
-                    .font(.system(size: 11, weight: .medium))
+                    .font(.system(size: 9, weight: .medium))
                     .foregroundColor(.white.opacity(0.7))
             }
         }
-        .padding(.horizontal, 10)
-        .padding(.vertical, 10)
+        .padding(.horizontal, 8)
+        .padding(.vertical, 6)
         .background(cardBackgroundColor(for: event.category))
         .cornerRadius(12)
     }
