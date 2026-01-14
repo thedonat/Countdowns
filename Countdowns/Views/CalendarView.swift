@@ -13,6 +13,8 @@ struct CalendarView: View {
     @EnvironmentObject var themeManager: ThemeManager
     @State private var selectedDate = Date()
     @State private var currentMonth = Date()
+
+    private let calendar = Calendar.current
     
     var body: some View {
         NavigationStack {
