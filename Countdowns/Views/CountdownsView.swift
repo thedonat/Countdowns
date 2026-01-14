@@ -64,14 +64,14 @@ struct CountdownsView: View {
                     }
                     
                     // My Countdowns Section
-                    if !eventStore.sortedEvents.isEmpty {
+                    if !eventStore.events.isEmpty {
                         VStack(alignment: .leading, spacing: 12) {
                             Text("My Countdowns")
                                 .font(.headline)
                                 .padding(.horizontal)
                             
                             LazyVStack(spacing: 16) {
-                                ForEach(eventStore.sortedEvents) { event in
+                                ForEach(eventStore.events.sorted { $0.date < $1.date }) { event in
                                     NavigationLink(destination: EventDetailView(event: event)
                                         .environmentObject(eventStore)) {
                                         EventCard(event: event)
@@ -84,7 +84,7 @@ struct CountdownsView: View {
                                 }
                             }
                             .padding(.horizontal)
-                            .animation(.spring(response: 0.4, dampingFraction: 0.8), value: eventStore.sortedEvents.map { $0.id })
+                            .animation(.spring(response: 0.4, dampingFraction: 0.8), value: eventStore.events.map { $0.id })
                         }
                     } else {
                         // Empty State
