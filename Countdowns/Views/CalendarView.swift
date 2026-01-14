@@ -161,8 +161,31 @@ struct CalendarGridView: View {
     
     private func hasEvent(on date: Date) -> Bool {
         events.contains { event in
-            calendar.isDate(event.date, inSameDayAs: date)
+            calendar.isDate(event.date, inSameDayAs: date) &&
+            shouldShowEvent(event)
         }
+    }
+
+    private func shouldShowEvent(_ event: Event) -> Bool {
+        let calendar = Calendar.current
+        let now = Date()
+
+        // Gelecekteki eventleri her zaman göster
+        if event.date > now {
+            return true
+        }
+
+        // Geçmiş eventleri kontrol et
+        let todayStart = calendar.startOfDay(for: now)
+        let todayEnd = calendar.date(byAdding: .day, value: 1, to: todayStart)!
+
+        // Eğer event bugün geçmişse ama gece yarısına kadar zaman varsa göster
+        if event.date >= todayStart && event.date <= todayEnd && now < todayEnd {
+            return true
+        }
+
+        // Diğer geçmiş eventleri gizle
+        return false
     }
 }
 
