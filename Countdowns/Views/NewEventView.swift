@@ -13,6 +13,7 @@ struct NewEventView: View {
     
     @State private var eventName = ""
     @State private var notes = ""
+    @State private var location = ""
     @State private var selectedDate = Date()
     @State private var selectedCategory: EventCategory = .event
     @State private var showNameError = false
@@ -114,7 +115,31 @@ struct NewEventView: View {
                             )
                     }
                     .padding(.horizontal)
-                    
+
+                    // Location
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Location (Optional)")
+                            .font(.headline)
+                            .foregroundColor(.primary)
+
+                        HStack(spacing: 12) {
+                            Image(systemName: "mappin")
+                                .foregroundColor(.gray)
+                                .font(.system(size: 16))
+
+                            TextField("Add location...", text: $location)
+                                .textFieldStyle(.plain)
+                        }
+                        .padding()
+                        .background(Color(.systemGray6))
+                        .cornerRadius(12)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 12)
+                                .stroke(Color(.systemGray4), lineWidth: 1)
+                        )
+                    }
+                    .padding(.horizontal)
+
                     // Date
                     VStack(alignment: .leading, spacing: 8) {
                         Text("Date")
@@ -202,6 +227,7 @@ struct NewEventView: View {
                 Button(action: {
                     let trimmedName = eventName.trimmingCharacters(in: .whitespacesAndNewlines)
                     let trimmedNotes = notes.trimmingCharacters(in: .whitespacesAndNewlines)
+                    let trimmedLocation = location.trimmingCharacters(in: .whitespacesAndNewlines)
                     if trimmedName.isEmpty {
                         showNameError = true
                     } else {
@@ -209,7 +235,8 @@ struct NewEventView: View {
                             name: trimmedName,
                             date: selectedDate,
                             category: selectedCategory,
-                            notes: trimmedNotes.isEmpty ? nil : trimmedNotes
+                            notes: trimmedNotes.isEmpty ? nil : trimmedNotes,
+                            location: trimmedLocation.isEmpty ? nil : trimmedLocation
                         )
                         withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
                             eventStore.addEvent(newEvent)

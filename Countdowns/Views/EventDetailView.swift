@@ -15,6 +15,7 @@ struct EventDetailView: View {
     let event: Event
     @State private var eventName: String
     @State private var notes: String
+    @State private var location: String
     @State private var selectedDate: Date
     @State private var selectedCategory: EventCategory
     @State private var showDeleteAlert = false
@@ -25,6 +26,7 @@ struct EventDetailView: View {
         self.event = event
         _eventName = State(initialValue: event.name)
         _notes = State(initialValue: event.notes ?? "")
+        _location = State(initialValue: event.location ?? "")
         _selectedDate = State(initialValue: event.date)
         _selectedCategory = State(initialValue: event.category)
     }
@@ -129,7 +131,31 @@ struct EventDetailView: View {
                     }
                     .padding(.horizontal)
                 }
-                
+
+                // Location
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Location")
+                        .font(.headline)
+                        .foregroundColor(.primary)
+
+                    HStack(spacing: 12) {
+                        Image(systemName: "mappin")
+                            .foregroundColor(.gray)
+                            .font(.system(size: 16))
+
+                        TextField("Add location...", text: $location)
+                            .textFieldStyle(.plain)
+                    }
+                    .padding()
+                    .background(Color(.systemGray6))
+                    .cornerRadius(12)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12)
+                            .stroke(Color(.systemGray4), lineWidth: 1)
+                    )
+                }
+                .padding(.horizontal)
+
                 // Notes
                 VStack(alignment: .leading, spacing: 8) {
                     Text("Notes")
@@ -199,14 +225,16 @@ struct EventDetailView: View {
     private func saveEvent() {
         let trimmedName = eventName.trimmingCharacters(in: .whitespacesAndNewlines)
         let trimmedNotes = notes.trimmingCharacters(in: .whitespacesAndNewlines)
-        
+        let trimmedLocation = location.trimmingCharacters(in: .whitespacesAndNewlines)
+
         if !trimmedName.isEmpty {
             var updatedEvent = event
             updatedEvent.name = trimmedName
             updatedEvent.date = selectedDate
             updatedEvent.category = selectedCategory
             updatedEvent.notes = trimmedNotes.isEmpty ? nil : trimmedNotes
-            
+            updatedEvent.location = trimmedLocation.isEmpty ? nil : trimmedLocation
+
             eventStore.updateEvent(updatedEvent)
             presentationMode.wrappedValue.dismiss()
         }

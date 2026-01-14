@@ -13,13 +13,15 @@ struct Event: Identifiable, Codable, Hashable {
     var date: Date
     var category: EventCategory
     var notes: String?
-    
-    init(id: UUID = UUID(), name: String, date: Date, category: EventCategory, notes: String? = nil) {
+    var location: String?
+
+    init(id: UUID = UUID(), name: String, date: Date, category: EventCategory, notes: String? = nil, location: String? = nil) {
         self.id = id
         self.name = name
         self.date = date
         self.category = category
         self.notes = notes
+        self.location = location
     }
     
     var daysRemaining: Int {

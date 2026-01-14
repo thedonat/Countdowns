@@ -120,7 +120,7 @@ extension EventStore {
                 category: .holiday
             ))
         }
-        
+
         // Valentine's Day 2026
         if let valentines2026 = calendar.date(from: DateComponents(year: 2026, month: 2, day: 14)) {
             suggestions.append(Event(
@@ -129,7 +129,7 @@ extension EventStore {
                 category: .anniversary
             ))
         }
-        
+
         // Summer Vacation (July 1, 2026)
         if let summerVacation = calendar.date(from: DateComponents(year: 2026, month: 7, day: 1)) {
             suggestions.append(Event(
