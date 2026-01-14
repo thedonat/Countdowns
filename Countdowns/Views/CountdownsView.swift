@@ -340,16 +340,16 @@ struct CountdownBox: View {
     let value: Int
     let label: String
     let color: Color
-    
+
     var body: some View {
         VStack(spacing: 4) {
             Text("\(value)")
                 .font(.system(size: 18, weight: .bold))
-                .foregroundColor(color)
-            
+                .foregroundColor(.white)
+
             Text(label)
                 .font(.system(size: 11, weight: .medium))
-                .foregroundColor(color)
+                .foregroundColor(.white.opacity(0.7))
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 10)
