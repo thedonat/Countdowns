@@ -211,9 +211,9 @@ struct EventCard: View {
                     NavigationLink(destination: EventDetailView(event: event)
                         .environmentObject(eventStore)) {
                         Image(systemName: "pencil")
-                            .font(.system(size: 12, weight: .bold))
+                            .font(.system(size: 16, weight: .bold))
                             .foregroundColor(.white)
-                            .frame(width: 24, height: 24)
+                            .frame(width: 28, height: 28)
                             .background(Color.black.opacity(0.3))
                             .clipShape(Circle())
                     }
@@ -223,9 +223,9 @@ struct EventCard: View {
                         showDeleteAlert = true
                     }) {
                         Image(systemName: "xmark")
-                            .font(.system(size: 12, weight: .bold))
+                            .font(.system(size: 16, weight: .bold))
                             .foregroundColor(.white)
-                            .frame(width: 24, height: 24)
+                            .frame(width: 28, height: 28)
                             .background(Color.black.opacity(0.3))
                             .clipShape(Circle())
                     }
@@ -233,14 +233,18 @@ struct EventCard: View {
             }
             
             // Event Name and Category
-            VStack(alignment: .leading, spacing: 4) {
-                Text(event.name)
-                    .font(.headline)
-                    .foregroundColor(.white)
-                
-                Text(event.category.rawValue)
-                    .font(.caption)
-                    .foregroundColor(.white.opacity(0.7))
+            HStack(alignment: .center, spacing: 12) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(event.name)
+                        .font(.headline)
+                        .foregroundColor(.white)
+
+                    Text(event.category.rawValue)
+                        .font(.caption)
+                        .foregroundColor(.white.opacity(0.7))
+                }
+
+                Spacer()
             }
             
             // Countdown Timer - 4 boxes
@@ -271,9 +275,13 @@ struct EventCard: View {
             }
             
             // Date
-            Text(DateFormatter.abbreviatedDate.string(from: event.date))
-                .font(.caption)
-                .foregroundColor(.white.opacity(0.7))
+            HStack {
+                Spacer()
+                Text(DateFormatter.abbreviatedDate.string(from: event.date))
+                    .font(.subheadline)
+                    .foregroundColor(.white.opacity(0.8))
+                Spacer()
+            }
         }
         .padding()
         .background(cardBackgroundColor(for: event.category))
