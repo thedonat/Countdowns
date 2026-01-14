@@ -195,16 +195,16 @@ struct EventCard: View {
     @State private var showDeleteAlert = false
 
     private func cardBackgroundColor(for category: EventCategory) -> Color {
-        switch category {
-        case .birthday: return Color(red: 0.35, green: 0.25, blue: 0.45) // Dark purple-pink
-        case .travel: return Color(red: 0.15, green: 0.25, blue: 0.4) // Dark blue
-        case .event: return Color(red: 0.3, green: 0.25, blue: 0.4) // Dark purple
-        case .wedding: return Color(red: 0.45, green: 0.2, blue: 0.25) // Dark red-pink
-        case .holiday: return Color(red: 0.4, green: 0.3, blue: 0.15) // Dark orange
-        case .anniversary: return Color(red: 0.15, green: 0.4, blue: 0.35) // Dark teal-green
-        case .family: return Color(red: 0.45, green: 0.3, blue: 0.5) // Distinct purple-pink
-        case .payment: return Color(red: 0.4, green: 0.35, blue: 0.15) // Dark yellow
-        case .other: return Color(red: 0.3, green: 0.3, blue: 0.3) // Dark gray
+        switch category.color {
+        case "pink": return Color(red: 0.35, green: 0.25, blue: 0.45) // Dark purple-pink
+        case "blue": return Color(red: 0.15, green: 0.25, blue: 0.4) // Dark blue
+        case "purple": return Color(red: 0.3, green: 0.25, blue: 0.4) // Dark purple
+        case "red": return Color(red: 0.45, green: 0.2, blue: 0.25) // Dark red-pink
+        case "orange": return Color(red: 0.4, green: 0.3, blue: 0.15) // Dark orange
+        case "green": return Color(red: 0.15, green: 0.4, blue: 0.35) // Dark teal-green
+        case "yellow": return Color(red: 0.4, green: 0.35, blue: 0.15) // Dark yellow
+        case "gray": return Color(red: 0.3, green: 0.3, blue: 0.3) // Dark gray
+        default: return Color(red: 0.3, green: 0.3, blue: 0.3) // Default gray
         }
     }
     
