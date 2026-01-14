@@ -26,4 +26,10 @@ extension DateFormatter {
         formatter.dateFormat = "MMM d"
         return formatter
     }()
+
+    static let abbreviatedTime: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.timeStyle = .short
+        return formatter
+    }()
 }
