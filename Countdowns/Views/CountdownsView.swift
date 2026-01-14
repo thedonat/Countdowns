@@ -196,44 +196,17 @@ struct EventCard: View {
     
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            // Header with icon and delete button
+            // Header with icon, name, category and action buttons
             HStack {
+                // Category Icon
                 Image(systemName: event.category.icon)
                     .font(.system(size: 24))
                     .foregroundColor(.white)
                     .frame(width: 50, height: 50)
                     .background(categoryColor(for: event.category))
                     .clipShape(RoundedRectangle(cornerRadius: 12))
-                
-                Spacer()
-                
-                HStack(spacing: 8) {
-                    NavigationLink(destination: EventDetailView(event: event)
-                        .environmentObject(eventStore)) {
-                        Image(systemName: "pencil")
-                            .font(.system(size: 16, weight: .bold))
-                            .foregroundColor(.white)
-                            .frame(width: 28, height: 28)
-                            .background(Color.black.opacity(0.3))
-                            .clipShape(Circle())
-                    }
-                    .buttonStyle(PlainButtonStyle())
-                    
-                    Button(action: {
-                        showDeleteAlert = true
-                    }) {
-                        Image(systemName: "xmark")
-                            .font(.system(size: 16, weight: .bold))
-                            .foregroundColor(.white)
-                            .frame(width: 28, height: 28)
-                            .background(Color.black.opacity(0.3))
-                            .clipShape(Circle())
-                    }
-                }
-            }
-            
-            // Event Name and Category
-            HStack(alignment: .center, spacing: 12) {
+
+                // Event Name and Category
                 VStack(alignment: .leading, spacing: 2) {
                     Text(event.name)
                         .font(.headline)
@@ -245,6 +218,31 @@ struct EventCard: View {
                 }
 
                 Spacer()
+
+                // Action Buttons
+                HStack(spacing: 8) {
+                    NavigationLink(destination: EventDetailView(event: event)
+                        .environmentObject(eventStore)) {
+                        Image(systemName: "pencil")
+                            .font(.system(size: 16, weight: .bold))
+                            .foregroundColor(.white)
+                            .frame(width: 28, height: 28)
+                            .background(Color.black.opacity(0.3))
+                            .clipShape(Circle())
+                    }
+                    .buttonStyle(PlainButtonStyle())
+
+                    Button(action: {
+                        showDeleteAlert = true
+                    }) {
+                        Image(systemName: "xmark")
+                            .font(.system(size: 16, weight: .bold))
+                            .foregroundColor(.white)
+                            .frame(width: 28, height: 28)
+                            .background(Color.black.opacity(0.3))
+                            .clipShape(Circle())
+                    }
+                }
             }
             
             // Countdown Timer - 4 boxes
