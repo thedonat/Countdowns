@@ -108,7 +108,7 @@ struct EventDetailView: View {
                     
                     VStack(spacing: 12) {
                         HStack(spacing: 12) {
-                            ForEach(Array(EventCategory.allCases.prefix(4))) { category in
+                            ForEach(Array(EventCategory.allCases.prefix(5))) { category in
                                 EventCategoryButton(
                                     category: category,
                                     isSelected: selectedCategory == category
@@ -117,9 +117,9 @@ struct EventDetailView: View {
                                 }
                             }
                         }
-                        
+
                         HStack(spacing: 12) {
-                            ForEach(Array(EventCategory.allCases.dropFirst(4))) { category in
+                            ForEach(Array(EventCategory.allCases.dropFirst(5))) { category in
                                 EventCategoryButton(
                                     category: category,
                                     isSelected: selectedCategory == category
