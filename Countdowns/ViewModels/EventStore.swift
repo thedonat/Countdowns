@@ -27,20 +27,20 @@ class EventStore: ObservableObject {
     
     var sortedEvents: [Event] {
         events
-            .filter { !$0.isPast }
+            .filter { shouldShowEvent($0) }
             .sorted { $0.date < $1.date }
     }
     
     func events(for category: EventCategory) -> [Event] {
         events
-            .filter { $0.category == category && !$0.isPast }
+            .filter { $0.category == category && shouldShowEvent($0) }
             .sorted { $0.date < $1.date }
     }
     
     func events(for date: Date) -> [Event] {
         let calendar = Calendar.current
         return events.filter { event in
-            calendar.isDate(event.date, inSameDayAs: date)
+            calendar.isDate(event.date, inSameDayAs: date) && shouldShowEvent(event)
         }
     }
     
@@ -66,7 +66,29 @@ class EventStore: ObservableObject {
     }
     
     func eventCount(for category: EventCategory) -> Int {
-        events.filter { $0.category == category && !$0.isPast }.count
+        events.filter { $0.category == category && shouldShowEvent($0) }.count
+    }
+
+    private func shouldShowEvent(_ event: Event) -> Bool {
+        let calendar = Calendar.current
+        let now = Date()
+
+        // Gelecekteki eventleri her zaman göster
+        if event.date > now {
+            return true
+        }
+
+        // Geçmiş eventleri kontrol et
+        let todayStart = calendar.startOfDay(for: now)
+        let todayEnd = calendar.date(byAdding: .day, value: 1, to: todayStart)!
+
+        // Eğer event bugün geçmişse ama gece yarısına kadar zaman varsa göster
+        if event.date >= todayStart && event.date <= todayEnd && now < todayEnd {
+            return true
+        }
+
+        // Diğer geçmiş eventleri gizle
+        return false
     }
     
     private func saveEvents() {
