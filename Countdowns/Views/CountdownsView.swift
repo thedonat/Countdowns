@@ -64,14 +64,15 @@ struct CountdownsView: View {
                     }
                     
                     // My Countdowns Section
-                    if !eventStore.events.isEmpty {
+                    let visibleEvents = eventStore.events.filter { shouldShowEvent($0) }
+                    if !visibleEvents.isEmpty {
                         VStack(alignment: .leading, spacing: 12) {
                             Text("My Countdowns")
                                 .font(.headline)
                                 .padding(.horizontal)
                             
                             LazyVStack(spacing: 16) {
-                                ForEach(eventStore.events.sorted { $0.date < $1.date }) { event in
+                                ForEach(eventStore.events.filter { shouldShowEvent($0) }.sorted { $0.date < $1.date }) { event in
                                     NavigationLink(destination: EventDetailView(event: event)
                                         .environmentObject(eventStore)) {
                                         EventCard(event: event)
@@ -84,7 +85,7 @@ struct CountdownsView: View {
                                 }
                             }
                             .padding(.horizontal)
-                            .animation(.spring(response: 0.4, dampingFraction: 0.8), value: eventStore.events.map { $0.id })
+                            .animation(.spring(response: 0.4, dampingFraction: 0.8), value: visibleEvents.map { $0.id })
                         }
                     } else {
                         // Empty State
@@ -142,6 +143,28 @@ struct CountdownsView: View {
         .onReceive(timer) { _ in
             // Force view update for countdown timers
         }
+
+    private func shouldShowEvent(_ event: Event) -> Bool {
+        let calendar = Calendar.current
+        let now = Date()
+
+        // Gelecekteki eventleri her zaman göster
+        if event.date > now {
+            return true
+        }
+
+        // Geçmiş eventleri kontrol et
+        let todayStart = calendar.startOfDay(for: now)
+        let todayEnd = calendar.date(byAdding: .day, value: 1, to: todayStart)!
+
+        // Eğer event bugün geçmişse ama gece yarısına kadar zaman varsa göster
+        if event.date >= todayStart && event.date <= todayEnd && now < todayEnd {
+            return true
+        }
+
+        // Diğer geçmiş eventleri gizle
+        return false
+    }
     }
 }
 
