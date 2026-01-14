@@ -249,13 +249,25 @@ struct EventCard: View {
                 let hours = (Int(timeRemaining) % 86400) / 3600
                 let minutes = (Int(timeRemaining) % 3600) / 60
                 let seconds = Int(timeRemaining) % 60
-                
+
                 HStack(spacing: 8) {
                     CountdownBox(value: days, label: "Days", color: categoryColor(for: event.category))
                     CountdownBox(value: hours, label: "Hours", color: categoryColor(for: event.category))
                     CountdownBox(value: minutes, label: "Mins", color: categoryColor(for: event.category))
                     CountdownBox(value: seconds, label: "Secs", color: categoryColor(for: event.category))
                 }
+            } else {
+                // Event has started
+                HStack {
+                    Image(systemName: "play.circle.fill")
+                        .font(.system(size: 20))
+                        .foregroundColor(categoryColor(for: event.category))
+
+                    Text("Started")
+                        .font(.headline)
+                        .foregroundColor(categoryColor(for: event.category))
+                }
+                .padding(.vertical, 8)
             }
             
             // Date
