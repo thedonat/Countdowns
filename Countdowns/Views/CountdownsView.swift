@@ -180,6 +180,7 @@ struct QuickAddCard: View {
         case .wedding: return Color.red.opacity(0.8)
         case .holiday: return Color.orange.opacity(0.8)
         case .anniversary: return Color.green.opacity(0.8)
+        case .family: return Color.pink.opacity(0.8)
         case .payment: return Color.yellow.opacity(0.8)
         case .other: return Color.gray.opacity(0.8)
         }
