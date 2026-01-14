@@ -62,41 +62,6 @@ struct CalendarView: View {
                     .clipShape(RoundedRectangle(cornerRadius: 16))
                     .shadow(color: Color.black.opacity(0.1), radius: 5, x: 0, y: 2)
                     
-                    // Upcoming Events
-                    VStack(alignment: .leading, spacing: 16) {
-                        Text("Upcoming Events")
-                            .font(.title2)
-                            .fontWeight(.bold)
-                            .padding(.horizontal)
-                        
-                        let selectedEvents = eventStore.events(for: selectedDate)
-                        
-                        if selectedEvents.isEmpty {
-                            Text("No events on this date")
-                                .font(.subheadline)
-                                .foregroundColor(.secondary)
-                                .padding(.horizontal)
-                        } else {
-                            LazyVStack(spacing: 12) {
-                                ForEach(selectedEvents) { event in
-                                    UpcomingEventRow(event: event)
-                                }
-                            }
-                            .padding(.horizontal)
-                        }
-                        
-                        // Also show general upcoming events
-                        let upcoming = eventStore.upcomingEvents(limit: 5)
-                        if !upcoming.isEmpty && selectedEvents.isEmpty {
-                            Divider()
-                                .padding(.horizontal)
-                            
-                            ForEach(upcoming) { event in
-                                UpcomingEventRow(event: event)
-                            }
-                            .padding(.horizontal)
-                        }
-                    }
                 }
                 .padding()
             }
@@ -220,90 +185,6 @@ struct CalendarDayView: View {
     }
 }
 
-struct UpcomingEventRow: View {
-    let event: Event
-    @EnvironmentObject var eventStore: EventStore
-    @State private var timeRemaining: TimeInterval = 0
-    @State private var showDeleteAlert = false
-
-    var body: some View {
-        HStack(spacing: 12) {
-            Image(systemName: event.category.icon)
-                .font(.system(size: 20))
-                .foregroundColor(.white)
-                .frame(width: 40, height: 40)
-                .background(categoryColor)
-                .clipShape(RoundedRectangle(cornerRadius: 8))
-
-            VStack(alignment: .leading, spacing: 4) {
-                Text(event.name)
-                    .font(.headline)
-
-                Text(DateFormatter.monthDay.string(from: event.date))
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-            }
-
-            Spacer()
-
-            HStack(spacing: 8) {
-                if timeRemaining > 0 {
-                    let days = Int(timeRemaining) / 86400
-                    Text("\(days)d")
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
-                }
-
-                Button(action: {
-                    showDeleteAlert = true
-                }) {
-                    Image(systemName: "xmark")
-                        .font(.system(size: 12, weight: .bold))
-                        .foregroundColor(.white)
-                        .frame(width: 24, height: 24)
-                        .background(Color.black.opacity(0.3))
-                        .clipShape(Circle())
-                }
-            }
-        }
-        .padding()
-        .background(Color(.systemGray6))
-        .clipShape(RoundedRectangle(cornerRadius: 12))
-        .onAppear {
-            updateTimeRemaining()
-        }
-        .onReceive(Timer.publish(every: 1, on: .main, in: .common).autoconnect()) { _ in
-            updateTimeRemaining()
-        }
-        .alert("Delete Event", isPresented: $showDeleteAlert) {
-            Button("Cancel", role: .cancel) { }
-            Button("Delete", role: .destructive) {
-                withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
-                    eventStore.deleteEvent(event)
-                }
-            }
-        } message: {
-            Text("Are you sure you want to delete \"\(event.name)\"? This action cannot be undone.")
-        }
-    }
-    
-    private func updateTimeRemaining() {
-        timeRemaining = event.timeRemaining
-    }
-    
-    private var categoryColor: Color {
-        switch event.category {
-        case .birthday: return Color.pink
-        case .travel: return Color.blue
-        case .event: return Color.purple
-        case .wedding: return Color.red
-        case .holiday: return Color.orange
-        case .anniversary: return Color.green
-        case .payment: return Color.yellow
-        case .other: return Color.gray
-        }
-    }
-}
 
 #Preview {
     CalendarView()
