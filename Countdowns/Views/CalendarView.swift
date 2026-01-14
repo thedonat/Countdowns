@@ -222,8 +222,10 @@ struct CalendarDayView: View {
 
 struct UpcomingEventRow: View {
     let event: Event
+    @EnvironmentObject var eventStore: EventStore
     @State private var timeRemaining: TimeInterval = 0
-    
+    @State private var showDeleteAlert = false
+
     var body: some View {
         HStack(spacing: 12) {
             Image(systemName: event.category.icon)
@@ -232,23 +234,36 @@ struct UpcomingEventRow: View {
                 .frame(width: 40, height: 40)
                 .background(categoryColor)
                 .clipShape(RoundedRectangle(cornerRadius: 8))
-            
+
             VStack(alignment: .leading, spacing: 4) {
                 Text(event.name)
                     .font(.headline)
-                
+
                 Text(DateFormatter.monthDay.string(from: event.date))
                     .font(.caption)
                     .foregroundColor(.secondary)
             }
-            
+
             Spacer()
-            
-            if timeRemaining > 0 {
-                let days = Int(timeRemaining) / 86400
-                Text("\(days)d")
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
+
+            HStack(spacing: 8) {
+                if timeRemaining > 0 {
+                    let days = Int(timeRemaining) / 86400
+                    Text("\(days)d")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                }
+
+                Button(action: {
+                    showDeleteAlert = true
+                }) {
+                    Image(systemName: "xmark")
+                        .font(.system(size: 12, weight: .bold))
+                        .foregroundColor(.white)
+                        .frame(width: 24, height: 24)
+                        .background(Color.black.opacity(0.3))
+                        .clipShape(Circle())
+                }
             }
         }
         .padding()
@@ -259,6 +274,16 @@ struct UpcomingEventRow: View {
         }
         .onReceive(Timer.publish(every: 1, on: .main, in: .common).autoconnect()) { _ in
             updateTimeRemaining()
+        }
+        .alert("Delete Event", isPresented: $showDeleteAlert) {
+            Button("Cancel", role: .cancel) { }
+            Button("Delete", role: .destructive) {
+                withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
+                    eventStore.deleteEvent(event)
+                }
+            }
+        } message: {
+            Text("Are you sure you want to delete \"\(event.name)\"? This action cannot be undone.")
         }
     }
     
@@ -283,4 +308,5 @@ struct UpcomingEventRow: View {
 #Preview {
     CalendarView()
         .environmentObject(EventStore())
+        .environmentObject(ThemeManager())
 }
