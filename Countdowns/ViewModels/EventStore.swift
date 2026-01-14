@@ -132,8 +132,9 @@ extension EventStore {
     var quickAddSuggestions: [Event] {
         let calendar = Calendar.current
         let now = Date()
+        let currentYear = calendar.component(.year, from: now)
         var suggestions: [Event] = []
-        
+
         // New Year 2027
         if let newYear2027 = calendar.date(from: DateComponents(year: 2027, month: 1, day: 1)) {
             suggestions.append(Event(
@@ -148,7 +149,61 @@ extension EventStore {
             suggestions.append(Event(
                 name: "Valentine's Day",
                 date: valentines2026,
-                category: .anniversary
+                category: .family
+            ))
+        }
+
+        // Women's Day (March 8)
+        if let womensDay = calendar.date(from: DateComponents(year: currentYear, month: 3, day: 8)),
+           womensDay > now {
+            suggestions.append(Event(
+                name: "Women's Day",
+                date: womensDay,
+                category: .family
+            ))
+        }
+        // Next year's Women's Day if current year has passed
+        if let womensDayNext = calendar.date(from: DateComponents(year: currentYear + 1, month: 3, day: 8)) {
+            suggestions.append(Event(
+                name: "Women's Day",
+                date: womensDayNext,
+                category: .family
+            ))
+        }
+
+        // Mother's Day (Second Sunday in May)
+        if let mothersDay = findNthWeekdayInMonth(year: currentYear, month: 5, weekday: 1, nth: 2),
+           mothersDay > now {
+            suggestions.append(Event(
+                name: "Mother's Day",
+                date: mothersDay,
+                category: .family
+            ))
+        }
+        // Next year's Mother's Day
+        if let mothersDayNext = findNthWeekdayInMonth(year: currentYear + 1, month: 5, weekday: 1, nth: 2) {
+            suggestions.append(Event(
+                name: "Mother's Day",
+                date: mothersDayNext,
+                category: .family
+            ))
+        }
+
+        // Father's Day (Third Sunday in June)
+        if let fathersDay = findNthWeekdayInMonth(year: currentYear, month: 6, weekday: 1, nth: 3),
+           fathersDay > now {
+            suggestions.append(Event(
+                name: "Father's Day",
+                date: fathersDay,
+                category: .family
+            ))
+        }
+        // Next year's Father's Day
+        if let fathersDayNext = findNthWeekdayInMonth(year: currentYear + 1, month: 6, weekday: 1, nth: 3) {
+            suggestions.append(Event(
+                name: "Father's Day",
+                date: fathersDayNext,
+                category: .family
             ))
         }
 
@@ -160,8 +215,29 @@ extension EventStore {
                 category: .travel
             ))
         }
-        
+
         // Filter out past dates and return
         return suggestions.filter { !$0.isPast }
+    }
+
+    private func findNthWeekdayInMonth(year: Int, month: Int, weekday: Int, nth: Int) -> Date? {
+        let calendar = Calendar.current
+
+        // Get the first day of the month
+        guard let firstOfMonth = calendar.date(from: DateComponents(year: year, month: month, day: 1)) else {
+            return nil
+        }
+
+        // Find the first occurrence of the desired weekday
+        let firstWeekday = calendar.component(.weekday, from: firstOfMonth)
+        let daysToAdd = (weekday - firstWeekday + 7) % 7
+
+        guard let firstOccurrence = calendar.date(byAdding: .day, value: daysToAdd, to: firstOfMonth) else {
+            return nil
+        }
+
+        // Add weeks to get the nth occurrence
+        let weeksToAdd = nth - 1
+        return calendar.date(byAdding: .weekOfMonth, value: weeksToAdd, to: firstOccurrence)
     }
 }

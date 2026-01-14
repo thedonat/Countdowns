@@ -47,6 +47,7 @@ enum EventCategory: String, Codable, CaseIterable, Identifiable {
     case wedding = "Wedding"
     case holiday = "Holiday"
     case anniversary = "Anniversary"
+    case family = "Family"
     case payment = "Payment"
     case other = "Other"
     
@@ -60,6 +61,7 @@ enum EventCategory: String, Codable, CaseIterable, Identifiable {
         case .wedding: return "heart.fill"
         case .holiday: return "star"
         case .anniversary: return "sparkles"
+        case .family: return "heart.circle"
         case .payment: return "creditcard"
         case .other: return "mappin"
         }
@@ -73,6 +75,7 @@ enum EventCategory: String, Codable, CaseIterable, Identifiable {
         case .wedding: return "red"
         case .holiday: return "orange"
         case .anniversary: return "green"
+        case .family: return "pink"
         case .payment: return "yellow"
         case .other: return "gray"
         }
