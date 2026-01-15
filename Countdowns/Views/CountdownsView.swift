@@ -282,7 +282,13 @@ struct EventCard: View {
             }
         }
         .padding()
-        .background(categoryColor(for: event.category).opacity(0.8))
+        .background(
+            LinearGradient(
+                colors: [categoryColor(for: event.category).opacity(0.1), categoryColor(for: event.category).opacity(0.05)],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+        )
         .clipShape(RoundedRectangle(cornerRadius: 16))
         .onAppear {
             updateTimeRemaining()
