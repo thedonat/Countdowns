@@ -77,12 +77,12 @@ struct NewEventView: View {
                                 .padding(.vertical, 16)
                                 .transition(.opacity)
                             }
-                            
+
                             TextField("", text: $eventName)
                                 .textFieldStyle(.plain)
                                 .padding()
                         }
-                        .background(Color(.systemGray6))
+                        .background(Color(.systemGray5).opacity(0.8))
                         .cornerRadius(12)
                         .overlay(
                             RoundedRectangle(cornerRadius: 12)
@@ -107,7 +107,7 @@ struct NewEventView: View {
                             .textFieldStyle(.plain)
                             .lineLimit(3...6)
                             .padding()
-                            .background(Color(.systemGray6))
+                            .background(Color(.systemGray5).opacity(0.8))
                             .cornerRadius(12)
                             .overlay(
                                 RoundedRectangle(cornerRadius: 12)
@@ -131,7 +131,7 @@ struct NewEventView: View {
                                 .textFieldStyle(.plain)
                         }
                         .padding()
-                        .background(Color(.systemGray6))
+                        .background(Color(.systemGray5).opacity(0.8))
                         .cornerRadius(12)
                         .overlay(
                             RoundedRectangle(cornerRadius: 12)
@@ -156,7 +156,7 @@ struct NewEventView: View {
                         .labelsHidden()
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .padding()
-                        .background(Color(.secondarySystemBackground))
+                        .background(Color(.systemGray5).opacity(0.8))
                         .cornerRadius(12)
                         .overlay(
                             RoundedRectangle(cornerRadius: 12)
