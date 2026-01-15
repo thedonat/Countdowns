@@ -182,7 +182,6 @@ struct QuickAddCard: View {
         case .anniversary: return Color.green.opacity(0.8)
         case .family: return Color.pink.opacity(0.8)
         case .payment: return Color.yellow.opacity(0.8)
-        case .other: return Color.gray.opacity(0.8)
         }
     }
 }
@@ -194,19 +193,6 @@ struct EventCard: View {
     @State private var timeRemaining: TimeInterval = 0
     @State private var showDeleteAlert = false
 
-    private func cardBackgroundColor(for category: EventCategory) -> Color {
-        switch category.color {
-        case "pink": return Color(red: 0.4, green: 0.3, blue: 0.5).opacity(0.8) // Family uses pink, keep darker
-        case "blue": return Color(red: 0.15, green: 0.25, blue: 0.4).opacity(0.8)
-        case "purple": return Color(red: 0.3, green: 0.25, blue: 0.4).opacity(0.8)
-        case "red": return Color(red: 0.45, green: 0.2, blue: 0.25).opacity(0.8)
-        case "coral": return Color(red: 0.5, green: 0.3, blue: 0.2).opacity(0.8) // Holiday - coral color
-        case "green": return Color(red: 0.15, green: 0.4, blue: 0.35).opacity(0.8)
-        case "yellow": return Color(red: 0.4, green: 0.35, blue: 0.15).opacity(0.8)
-        case "gray": return Color(red: 0.3, green: 0.3, blue: 0.3).opacity(0.8)
-        default: return Color(red: 0.3, green: 0.3, blue: 0.3).opacity(0.8)
-        }
-    }
     
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -296,7 +282,7 @@ struct EventCard: View {
             }
         }
         .padding()
-        .background(cardBackgroundColor(for: event.category))
+        .background(categoryColor(for: event.category).opacity(0.8))
         .clipShape(RoundedRectangle(cornerRadius: 16))
         .onAppear {
             updateTimeRemaining()
@@ -330,7 +316,6 @@ struct EventCard: View {
         case .anniversary: return Color.green
         case .family: return Color.pink
         case .payment: return Color.yellow
-        case .other: return Color.gray
         }
     }
     

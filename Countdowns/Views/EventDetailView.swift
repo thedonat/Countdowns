@@ -327,7 +327,6 @@ struct EventCategoryButton: View {
         case .anniversary: return Color.green
         case .family: return Color.pink
         case .payment: return Color.yellow
-        case .other: return Color.gray
         }
     }
 }

@@ -407,7 +407,6 @@ private struct UpcomingEventRowView: View {
         case .anniversary: return Color(red: 0.15, green: 0.4, blue: 0.35) // Dark teal-green
         case .family: return Color(red: 0.35, green: 0.25, blue: 0.45) // Dark purple-pink
         case .payment: return Color(red: 0.4, green: 0.35, blue: 0.15) // Dark yellow
-        case .other: return Color(red: 0.3, green: 0.3, blue: 0.3) // Dark gray
         }
     }
 }

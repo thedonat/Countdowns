@@ -62,7 +62,6 @@ enum EventCategory: String, Codable, CaseIterable, Identifiable {
         case .anniversary: return "sparkles"
         case .family: return "heart.circle"
         case .payment: return "creditcard"
-        case .other: return "mappin"
         }
     }
     
