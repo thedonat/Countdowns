@@ -196,11 +196,11 @@ struct EventCard: View {
 
     private func cardBackgroundColor(for category: EventCategory) -> Color {
         switch category.color {
-        case "pink": return Color(red: 0.35, green: 0.25, blue: 0.45).opacity(0.8)
+        case "pink": return Color(red: 0.4, green: 0.3, blue: 0.5).opacity(0.8) // Family uses pink, keep darker
         case "blue": return Color(red: 0.15, green: 0.25, blue: 0.4).opacity(0.8)
         case "purple": return Color(red: 0.3, green: 0.25, blue: 0.4).opacity(0.8)
         case "red": return Color(red: 0.45, green: 0.2, blue: 0.25).opacity(0.8)
-        case "orange": return Color(red: 0.4, green: 0.3, blue: 0.15).opacity(0.8)
+        case "coral": return Color(red: 0.5, green: 0.3, blue: 0.2).opacity(0.8) // Holiday - coral color
         case "green": return Color(red: 0.15, green: 0.4, blue: 0.35).opacity(0.8)
         case "yellow": return Color(red: 0.4, green: 0.35, blue: 0.15).opacity(0.8)
         case "gray": return Color(red: 0.3, green: 0.3, blue: 0.3).opacity(0.8)

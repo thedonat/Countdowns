@@ -41,15 +41,14 @@ struct Event: Identifiable, Codable, Hashable {
 }
 
 enum EventCategory: String, Codable, CaseIterable, Identifiable {
+    case event = "Event"
     case birthday = "Birthday"
     case travel = "Travel"
-    case event = "Event"
     case wedding = "Wedding"
     case holiday = "Holiday"
     case anniversary = "Anniversary"
     case family = "Family"
     case payment = "Payment"
-    case other = "Other"
     
     var id: String { rawValue }
     
@@ -69,15 +68,14 @@ enum EventCategory: String, Codable, CaseIterable, Identifiable {
     
     var color: String {
         switch self {
+        case .event: return "purple"
         case .birthday: return "pink"
         case .travel: return "blue"
-        case .event: return "purple"
         case .wedding: return "red"
-        case .holiday: return "orange"
+        case .holiday: return "coral"
         case .anniversary: return "green"
         case .family: return "pink"
         case .payment: return "yellow"
-        case .other: return "gray"
         }
     }
 }

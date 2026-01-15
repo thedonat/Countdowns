@@ -84,15 +84,14 @@ struct CategoryCard: View {
     
     private var categoryColor: Color {
         switch category {
+        case .event: return Color.purple
         case .birthday: return Color.pink
         case .travel: return Color.blue
-        case .event: return Color.purple
         case .wedding: return Color.red
-        case .holiday: return Color.orange
+        case .holiday: return Color(red: 0.5, green: 0.3, blue: 0.2) // Coral
         case .anniversary: return Color.green
-        case .family: return Color.pink
+        case .family: return Color.pink.opacity(0.7) // Lighter pink
         case .payment: return Color.yellow
-        case .other: return Color.gray
         }
     }
 }
