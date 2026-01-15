@@ -71,7 +71,7 @@ enum EventCategory: String, Codable, CaseIterable, Identifiable {
         case .birthday: return "pink"
         case .travel: return "blue"
         case .wedding: return "red"
-        case .holiday: return "coral"
+        case .holiday: return "brown"
         case .anniversary: return "green"
         case .family: return "pink"
         case .payment: return "yellow"

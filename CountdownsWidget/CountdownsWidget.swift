@@ -736,7 +736,7 @@ private func categoryColor(for category: EventCategory) -> Color {
     case .birthday: return Color.pink
     case .travel: return Color.blue
     case .wedding: return Color.red
-    case .holiday: return Color(red: 0.5, green: 0.3, blue: 0.2) // Coral
+        case .holiday: return Color(red: 0.4, green: 0.3, blue: 0.2) // Brown
     case .anniversary: return Color.green
     case .family: return Color.pink.opacity(0.7) // Lighter pink
     case .payment: return Color.yellow
