@@ -82,7 +82,7 @@ struct NewEventView: View {
                                 .textFieldStyle(.plain)
                                 .padding()
                         }
-                        .background(Color(.systemGray5).opacity(0.8))
+                        .background(Color(.systemGray4).opacity(0.6))
                         .cornerRadius(12)
                         .overlay(
                             RoundedRectangle(cornerRadius: 12)
@@ -107,7 +107,7 @@ struct NewEventView: View {
                             .textFieldStyle(.plain)
                             .lineLimit(3...6)
                             .padding()
-                            .background(Color(.systemGray5).opacity(0.8))
+                            .background(Color(.systemGray4).opacity(0.6))
                             .cornerRadius(12)
                             .overlay(
                                 RoundedRectangle(cornerRadius: 12)
@@ -131,7 +131,7 @@ struct NewEventView: View {
                                 .textFieldStyle(.plain)
                         }
                         .padding()
-                        .background(Color(.systemGray5).opacity(0.8))
+                        .background(Color(.systemGray4).opacity(0.6))
                         .cornerRadius(12)
                         .overlay(
                             RoundedRectangle(cornerRadius: 12)
@@ -156,7 +156,7 @@ struct NewEventView: View {
                         .labelsHidden()
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .padding()
-                        .background(Color(.systemGray5).opacity(0.8))
+                        .background(Color(.systemGray4).opacity(0.6))
                         .cornerRadius(12)
                         .overlay(
                             RoundedRectangle(cornerRadius: 12)
@@ -310,7 +310,7 @@ struct CategoryButton: View {
                 Group {
                     if isSelected {
                         LinearGradient(
-                            colors: [Color.purple, Color.blue],
+                            colors: [categoryColor.opacity(0.8), categoryColor.opacity(0.6)],
                             startPoint: .topLeading,
                             endPoint: .bottomTrailing
                         )
