@@ -210,11 +210,11 @@ struct EventCard: View {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(event.name)
                         .font(.headline)
-                        .foregroundColor(.white)
+                        .foregroundColor(.primary)
 
                     Text(event.category.rawValue)
                         .font(.caption)
-                        .foregroundColor(.white.opacity(0.7))
+                        .foregroundColor(.secondary)
                 }
 
                 Spacer()
@@ -225,7 +225,7 @@ struct EventCard: View {
                         .environmentObject(eventStore)) {
                         Image(systemName: "pencil")
                             .font(.system(size: 16, weight: .bold))
-                            .foregroundColor(.white)
+                            .foregroundColor(.primary)
                             .frame(width: 28, height: 28)
                             .background(Color.black.opacity(0.3))
                             .clipShape(Circle())
@@ -237,7 +237,7 @@ struct EventCard: View {
                     }) {
                         Image(systemName: "xmark")
                             .font(.system(size: 16, weight: .bold))
-                            .foregroundColor(.white)
+                            .foregroundColor(.primary)
                             .frame(width: 28, height: 28)
                             .background(Color.black.opacity(0.3))
                             .clipShape(Circle())
@@ -267,7 +267,7 @@ struct EventCard: View {
 
                     Text("Started")
                         .font(.headline)
-                        .foregroundColor(categoryColor(for: event.category))
+                        .foregroundColor(.primary)
                 }
                 .padding(.vertical, 8)
             }
@@ -277,7 +277,7 @@ struct EventCard: View {
                 Spacer()
                 Text(DateFormatter.abbreviatedDate.string(from: event.date))
                     .font(.subheadline)
-                    .foregroundColor(.white.opacity(0.8))
+                    .foregroundColor(.primary)
                 Spacer()
             }
         }
@@ -336,11 +336,11 @@ struct CountdownBox: View {
         VStack(spacing: 4) {
             Text("\(value)")
                 .font(.system(size: 18, weight: .bold))
-                .foregroundColor(.white)
+                .foregroundColor(.primary)
 
             Text(label)
                 .font(.system(size: 11, weight: .medium))
-                .foregroundColor(.white.opacity(0.7))
+                .foregroundColor(.secondary)
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 10)
