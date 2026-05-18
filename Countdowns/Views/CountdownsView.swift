@@ -13,6 +13,9 @@ struct CountdownsView: View {
     @EnvironmentObject var themeManager: ThemeManager
     @State private var showNewEvent = false
     @State private var showSuggestions = true
+    @State private var showSuccessAnimation = false
+    @State private var showAddConfirmation = false
+    @State private var selectedSuggestion: Event?
     @State private var timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
     
     var body: some View {
@@ -20,7 +23,8 @@ struct CountdownsView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 20) {
                     // Quick Add Suggestions
-                    if !eventStore.quickAddSuggestions.isEmpty {
+                    // Temporarily hidden
+                    if false && !eventStore.quickAddSuggestions.isEmpty {
                         VStack(alignment: .leading, spacing: 12) {
                             HStack(alignment: .center, spacing: 8) {
                                 Image(systemName: "star")
@@ -49,9 +53,8 @@ struct CountdownsView: View {
                                         ForEach(eventStore.quickAddSuggestions) { suggestion in
                                             QuickAddCard(event: suggestion)
                                                 .onTapGesture {
-                                                    withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
-                                                        eventStore.addEvent(suggestion)
-                                                    }
+                                                    selectedSuggestion = suggestion
+                                                    showAddConfirmation = true
                                                 }
                                         }
                                     }
@@ -138,9 +141,73 @@ struct CountdownsView: View {
                     .environmentObject(eventStore)
                     .environmentObject(themeManager)
             }
+            .alert(
+                LocalizationManager.localizedString("Add Event?"),
+                isPresented: $showAddConfirmation,
+                presenting: selectedSuggestion
+            ) { suggestion in
+                Button(LocalizationManager.localizedString("Cancel"), role: .cancel) {
+                    selectedSuggestion = nil
+                }
+                Button(LocalizationManager.localizedString("Add")) {
+                    if let suggestion = selectedSuggestion {
+                        withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
+                            eventStore.addEvent(suggestion)
+                        }
+                        // Show success animation
+                        withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                            showSuccessAnimation = true
+                        }
+                        // Hide after 1.5 seconds
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                            withAnimation(.easeOut(duration: 0.3)) {
+                                showSuccessAnimation = false
+                            }
+                        }
+                        selectedSuggestion = nil
+                    }
+                }
+            } message: { suggestion in
+                Text(LocalizationManager.localizedFormat("Do you want to add \"%@\"?", suggestion.name))
+            }
         }
+        .overlay(
+            // Success Animation Overlay
+            Group {
+                if showSuccessAnimation {
+                    SuccessTickView()
+                        .transition(.scale.combined(with: .opacity))
+                }
+            },
+            alignment: .center
+        )
         .onReceive(timer) { _ in
             // Force view update for countdown timers
+        }
+    }
+}
+
+struct SuccessTickView: View {
+    @State private var scale: CGFloat = 0.5
+    @State private var opacity: Double = 0
+    
+    var body: some View {
+        ZStack {
+            Circle()
+                .fill(Color.green)
+                .frame(width: 80, height: 80)
+            
+            Image(systemName: "checkmark")
+                .font(.system(size: 40, weight: .bold))
+                .foregroundColor(.white)
+        }
+        .scaleEffect(scale)
+        .opacity(opacity)
+        .onAppear {
+            withAnimation(.spring(response: 0.4, dampingFraction: 0.6)) {
+                scale = 1.0
+                opacity = 1.0
+            }
         }
     }
 }
@@ -155,35 +222,28 @@ struct QuickAddCard: View {
                 .font(.system(size: 20))
                 .foregroundColor(.white)
                 .frame(width: 40, height: 40)
-                .background(categoryColor(for: event.category))
+                .background(event.category.displayColor)
                 .clipShape(RoundedRectangle(cornerRadius: 12))
             
             Text(event.name)
                 .font(.headline)
                 .foregroundColor(.primary)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .multilineTextAlignment(.leading)
             
             Text(DateFormatter.abbreviatedDate.string(from: event.date))
                 .font(.caption)
                 .foregroundColor(.secondary)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .multilineTextAlignment(.leading)
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
         .padding(8)
         .frame(width: 140, height: 160)
         .background(colorScheme == .dark ? Color(.systemGray5) : Color(.systemGray6))
         .clipShape(RoundedRectangle(cornerRadius: 16))
     }
     
-    private func categoryColor(for category: EventCategory) -> Color {
-        switch category {
-        case .birthday: return Color.pink.opacity(0.8)
-        case .travel: return Color.blue.opacity(0.8)
-        case .event: return Color.purple.opacity(0.8)
-        case .wedding: return Color.red.opacity(0.8)
-        case .holiday: return Color(red: 0.4, green: 0.3, blue: 0.2).opacity(0.8) // Brown
-        case .anniversary: return Color.green.opacity(0.8)
-        case .family: return Color.pink.opacity(0.8)
-        case .payment: return Color.yellow.opacity(0.8)
-        }
-    }
 }
 
 struct EventCard: View {
@@ -203,7 +263,7 @@ struct EventCard: View {
                     .font(.system(size: 24))
                     .foregroundColor(.white)
                     .frame(width: 50, height: 50)
-                    .background(categoryColor(for: event.category))
+                    .background(event.category.displayColor)
                     .clipShape(RoundedRectangle(cornerRadius: 12))
 
                 // Event Name and Category
@@ -212,7 +272,7 @@ struct EventCard: View {
                         .font(.headline)
                         .foregroundColor(.primary)
 
-                    Text(event.category.rawValue)
+                    Text(event.category.localizedName)
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
@@ -220,28 +280,19 @@ struct EventCard: View {
                 Spacer()
 
                 // Action Buttons
-                HStack(spacing: 8) {
-                    NavigationLink(destination: EventDetailView(event: event)
-                        .environmentObject(eventStore)) {
-                        Image(systemName: "pencil")
-                            .font(.system(size: 16, weight: .bold))
-                            .foregroundColor(.primary)
-                            .frame(width: 28, height: 28)
-                            .background(Color.black.opacity(0.3))
-                            .clipShape(Circle())
-                    }
-                    .buttonStyle(PlainButtonStyle())
-
-                    Button(action: {
-                        showDeleteAlert = true
-                    }) {
-                        Image(systemName: "xmark")
-                            .font(.system(size: 16, weight: .bold))
-                            .foregroundColor(.primary)
-                            .frame(width: 28, height: 28)
-                            .background(Color.black.opacity(0.3))
-                            .clipShape(Circle())
-                    }
+                Button(action: {
+                    showDeleteAlert = true
+                }) {
+                    Image(systemName: "xmark")
+                        .font(.system(size: 14, weight: .bold))
+                        .foregroundColor(.primary)
+                        .frame(width: 30, height: 30)
+                        .background(Color(.systemBackground).opacity(0.6))
+                        .overlay(
+                            Circle()
+                                .stroke(Color.primary.opacity(0.15), lineWidth: 1)
+                        )
+                        .clipShape(Circle())
                 }
             }
             
@@ -253,21 +304,21 @@ struct EventCard: View {
                 let seconds = Int(timeRemaining) % 60
 
                 HStack(spacing: 8) {
-                    CountdownBox(value: days, label: "Days", color: categoryColor(for: event.category))
-                    CountdownBox(value: hours, label: "Hours", color: categoryColor(for: event.category))
-                    CountdownBox(value: minutes, label: "Mins", color: categoryColor(for: event.category))
-                    CountdownBox(value: seconds, label: "Secs", color: categoryColor(for: event.category))
+                    CountdownBox(value: days, label: "Days", color: event.category.displayColor)
+                    CountdownBox(value: hours, label: "Hours", color: event.category.displayColor)
+                    CountdownBox(value: minutes, label: "Mins", color: event.category.displayColor)
+                    CountdownBox(value: seconds, label: "Secs", color: event.category.displayColor)
                 }
-            } else {
-                // Event has started
+            } else if Calendar.current.isDateInToday(event.date) {
+                // Event started today
                 HStack {
                     Image(systemName: "play.circle.fill")
                         .font(.system(size: 20))
-                        .foregroundColor(categoryColor(for: event.category))
+                        .foregroundColor(event.category.displayColor)
 
-                    Text("Started")
+                    Text(LocalizationManager.localizedFormat("Started at %@", DateFormatter.abbreviatedTime.string(from: event.date)))
                         .font(.headline)
-                        .foregroundColor(.primary)
+                        .foregroundColor(event.category.displayColor)
                 }
                 .padding(.vertical, 8)
             }
@@ -284,7 +335,7 @@ struct EventCard: View {
         .padding()
         .background(
             LinearGradient(
-                colors: [categoryColor(for: event.category).opacity(0.1), categoryColor(for: event.category).opacity(0.05)],
+                colors: [event.category.displayColor.opacity(0.1), event.category.displayColor.opacity(0.05)],
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
             )
@@ -304,7 +355,7 @@ struct EventCard: View {
                 }
             }
         } message: {
-            Text("Are you sure you want to delete \"\(event.name)\"? This action cannot be undone.")
+            Text(LocalizationManager.localizedFormat("Are you sure you want to delete \"%@\"? This action cannot be undone.", event.name))
         }
     }
     
@@ -312,31 +363,18 @@ struct EventCard: View {
         timeRemaining = event.timeRemaining
     }
     
-    private func categoryColor(for category: EventCategory) -> Color {
-        switch category {
-        case .birthday: return Color.pink
-        case .travel: return Color.blue
-        case .event: return Color.purple
-        case .wedding: return Color.red
-        case .holiday: return Color.orange
-        case .anniversary: return Color.green
-        case .family: return Color.pink
-        case .payment: return Color.yellow
-        }
-    }
-    
 }
 
 struct CountdownBox: View {
     let value: Int
-    let label: String
+    let label: LocalizedStringKey
     let color: Color
 
     var body: some View {
         VStack(spacing: 4) {
             Text("\(value)")
                 .font(.system(size: 18, weight: .bold))
-                .foregroundColor(.primary)
+                .foregroundColor(color)
 
             Text(label)
                 .font(.system(size: 11, weight: .medium))

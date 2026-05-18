@@ -13,6 +13,6 @@ struct CountdownsWidgetBundle: WidgetBundle {
     var body: some Widget {
         NearestEventWidget()
         UpcomingEventsWidget()
-        CategoryEventsWidget()
+        CountdownsWidgetLiveActivity()
     }
 }

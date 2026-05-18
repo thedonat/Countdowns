@@ -1,21 +1,21 @@
 //
 //  Event.swift
-//  Countdowns
+//  CountdownsWidget
 //
-//  Created by Burak Donat on 1/13/26.
+//  Created by Burak Donat on 1/14/26.
 //
 
 import Foundation
 
-public struct Event: Identifiable, Codable, Hashable {
-    public let id: UUID
-    public var name: String
-    public var date: Date
-    public var category: EventCategory
-    public var notes: String?
-    public var location: String?
+struct Event: Identifiable, Codable, Hashable {
+    let id: UUID
+    var name: String
+    var date: Date
+    var category: EventCategory
+    var notes: String?
+    var location: String?
 
-    public init(id: UUID = UUID(), name: String, date: Date, category: EventCategory, notes: String? = nil, location: String? = nil) {
+    init(id: UUID = UUID(), name: String, date: Date, category: EventCategory, notes: String? = nil, location: String? = nil) {
         self.id = id
         self.name = name
         self.date = date
@@ -24,23 +24,23 @@ public struct Event: Identifiable, Codable, Hashable {
         self.location = location
     }
 
-    public var daysRemaining: Int {
+    var daysRemaining: Int {
         let calendar = Calendar.current
         let now = Date()
         let components = calendar.dateComponents([.day], from: now, to: date)
         return max(0, components.day ?? 0)
     }
 
-    public var timeRemaining: TimeInterval {
+    var timeRemaining: TimeInterval {
         max(0, date.timeIntervalSinceNow)
     }
 
-    public var isPast: Bool {
+    var isPast: Bool {
         date < Date()
     }
 }
 
-public enum EventCategory: String, Codable, CaseIterable, Identifiable {
+enum EventCategory: String, Codable, CaseIterable, Identifiable {
     case event = "Event"
     case birthday = "Birthday"
     case travel = "Travel"
@@ -50,13 +50,13 @@ public enum EventCategory: String, Codable, CaseIterable, Identifiable {
     case family = "Family"
     case payment = "Payment"
 
-    public var id: String { rawValue }
+    var id: String { rawValue }
 
-    public var localizedName: String {
-        LocalizationManager.localizedString(rawValue)
+    var localizedName: String {
+        NSLocalizedString(rawValue, comment: "")
     }
 
-    public var icon: String {
+    var icon: String {
         switch self {
         case .birthday: return "birthday.cake"
         case .travel: return "airplane"
@@ -69,7 +69,7 @@ public enum EventCategory: String, Codable, CaseIterable, Identifiable {
         }
     }
 
-    public var color: String {
+    var color: String {
         switch self {
         case .event: return "purple"
         case .birthday: return "pink"

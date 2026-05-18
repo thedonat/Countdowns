@@ -33,18 +33,11 @@ struct CountdownsEntry: TimelineEntry {
     let selectedCategory: EventCategory?
 
     var nearestEvent: Event? {
-        events.first
+        upcomingEvents.first
     }
 
     var upcomingEvents: [Event] {
-        Array(events.prefix(5))
-    }
-
-    var categoryEvents: [Event] {
-        if let category = selectedCategory {
-            return events.filter { $0.category == category }
-        }
-        return events
+        Array(events.prefix(6))
     }
 }
 
@@ -80,7 +73,7 @@ struct CountdownsProvider: TimelineProvider {
 
     private func createEntry() -> CountdownsEntry {
         let events = loadEvents()
-            .filter { !$0.isPast }
+            .filter { shouldIncludeInWidgets($0) }
             .sorted { $0.date < $1.date }
 
         // Load selected category from shared UserDefaults (set from the app)
@@ -109,11 +102,26 @@ struct CountdownsProvider: TimelineProvider {
         else {
             return []
         }
-        return decoded
+        return removePastEventsIfNeeded(decoded, sharedDefaults: sharedDefaults)
+    }
+
+    private func removePastEventsIfNeeded(
+        _ events: [Event],
+        sharedDefaults: UserDefaults?
+    ) -> [Event] {
+        return events.filter { shouldIncludeInWidgets($0) }
+    }
+
+    private func shouldIncludeInWidgets(_ event: Event) -> Bool {
+        let now = Date()
+        if event.date >= now {
+            return true
+        }
+        return Calendar.current.isDateInToday(event.date)
     }
 }
 
-// MARK: - 1) Nearest Event Widget (Small & Medium)
+// MARK: - 1) Nearest Event Widget (Small)
 
 struct NearestEventWidget: Widget {
     let kind: String = "NearestEventWidget"
@@ -124,23 +132,15 @@ struct NearestEventWidget: Widget {
         }
         .configurationDisplayName("Next Event")
         .description("Shows the nearest upcoming event.")
-        .supportedFamilies([.systemSmall, .systemMedium])
+        .supportedFamilies([.systemSmall])
     }
 }
 
 struct NearestEventWidgetView: View {
     let entry: CountdownsEntry
-    @Environment(\.widgetFamily) var family
 
     var body: some View {
-        switch family {
-        case .systemSmall:
-            SmallNearestEventView(entry: entry)
-        case .systemMedium:
-            MediumNearestEventView(entry: entry)
-        default:
-            SmallNearestEventView(entry: entry)
-        }
+        SmallNearestEventView(entry: entry)
     }
 }
 
@@ -149,9 +149,9 @@ struct SmallNearestEventView: View {
 
     var body: some View {
         Group {
-            if let event = entry.nearestEvent {
+            if let event = entry.upcomingEvents.first {
                 let categoryColor = categoryColor(for: event.category)
-                let (value, label) = primaryCountdown(for: event)
+                let (valueText, label) = primaryCountdown(for: event)
                 
                 VStack(alignment: .leading, spacing: 0) {
                     // Icon at top-left
@@ -164,16 +164,24 @@ struct SmallNearestEventView: View {
                     
                     Spacer()
                     
-                    // Large number with full label
-                    HStack(alignment: .firstTextBaseline, spacing: 4) {
-                        Text("\(value)")
-                            .font(.system(size: 48, weight: .bold))
+                    // Large number with full label or "Today"
+                    if let label {
+                        HStack(alignment: .firstTextBaseline, spacing: 4) {
+                            Text(valueText)
+                                .font(.system(size: 48, weight: .bold))
+                                .foregroundColor(categoryColor)
+                                .minimumScaleFactor(0.5)
+                            
+                            Text(label)
+                                .font(.system(size: 16, weight: .medium))
+                                .foregroundColor(categoryColor.opacity(0.8))
+                        }
+                    } else {
+                        Text(valueText)
+                            .font(.system(size: 28, weight: .bold))
                             .foregroundColor(categoryColor)
-                            .minimumScaleFactor(0.5)
-                        
-                        Text(label)
-                            .font(.system(size: 16, weight: .medium))
-                            .foregroundColor(categoryColor.opacity(0.8))
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.6)
                     }
                     
                     Spacer().frame(height: 2)
@@ -185,73 +193,8 @@ struct SmallNearestEventView: View {
                         .lineLimit(2)
                         .minimumScaleFactor(0.8)
                 }
-                .padding(6)
+                .padding(4)
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-                .containerBackground(for: .widget) {
-                    LinearGradient(
-                        colors: [categoryColor.opacity(0.2), categoryColor.opacity(0.05)],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    )
-                }
-            } else {
-                EmptyStateView(title: "No Events", subtitle: "Add events to see countdowns")
-                    .containerBackground(for: .widget) {
-                        Color(.systemBackground)
-                    }
-            }
-        }
-    }
-}
-
-struct MediumNearestEventView: View {
-    let entry: CountdownsEntry
-
-    var body: some View {
-        Group {
-            if let event = entry.nearestEvent {
-                let categoryColor = categoryColor(for: event.category)
-                let timeComponents = timeComponents(for: event)
-                
-                VStack(spacing: 0) {
-                    // Top section: Icon + Event name + Date
-                    HStack(alignment: .top, spacing: 10) {
-                        Image(systemName: event.category.icon)
-                            .font(.system(size: 14))
-                            .foregroundColor(.white)
-                            .frame(width: 28, height: 28)
-                            .background(categoryColor)
-                            .clipShape(Circle())
-                        
-                        VStack(alignment: .leading, spacing: 1) {
-                            Text(event.name)
-                                .font(.system(size: 15, weight: .bold))
-                                .foregroundColor(.primary)
-                                .lineLimit(2)
-                                .minimumScaleFactor(0.8)
-                            
-                            Text(DateFormatter.widgetMonthDay.string(from: event.date))
-                                .font(.system(size: 11))
-                                .foregroundColor(.secondary)
-                        }
-                        
-                        Spacer(minLength: 0)
-                    }
-                    .padding(.horizontal, 8)
-                    .padding(.top, 8)
-                    
-                    Spacer()
-                    
-                    // Bottom section: Countdown breakdown
-                    HStack(spacing: 0) {
-                        CountdownItem(value: timeComponents.days, label: "days", color: categoryColor)
-                        CountdownItem(value: timeComponents.hours, label: "hrs", color: categoryColor)
-                        CountdownItem(value: timeComponents.minutes, label: "min", color: categoryColor)
-                        CountdownItem(value: timeComponents.seconds, label: "sec", color: categoryColor)
-                    }
-                    .padding(.horizontal, 8)
-                    .padding(.bottom, 8)
-                }
                 .containerBackground(for: .widget) {
                     LinearGradient(
                         colors: [categoryColor.opacity(0.2), categoryColor.opacity(0.05)],
@@ -271,7 +214,7 @@ struct MediumNearestEventView: View {
 
 private struct CountdownItem: View {
     let value: Int
-    let label: String
+    let label: LocalizedStringKey
     let color: Color
     
     var body: some View {
@@ -300,12 +243,13 @@ struct UpcomingEventsWidget: Widget {
         }
         .configurationDisplayName("Upcoming Events")
         .description("Shows upcoming events.")
-        .supportedFamilies([.systemMedium])
+        .supportedFamilies([.systemMedium, .systemLarge])
     }
 }
 
 struct UpcomingEventsWidgetView: View {
     let entry: CountdownsEntry
+    @Environment(\.widgetFamily) var family
 
     var body: some View {
         Group {
@@ -315,32 +259,19 @@ struct UpcomingEventsWidgetView: View {
                         Color(.systemBackground)
                     }
             } else {
-                let firstCategoryColor = categoryColor(for: entry.upcomingEvents.first!.category)
-
                 VStack(alignment: .leading, spacing: 4) {
-                    // Header
-                    Text("UPCOMING EVENTS")
-                        .font(.system(size: 8, weight: .bold))
-                        .foregroundColor(.secondary)
-                        .textCase(.uppercase)
-                        .padding(.horizontal, 6)
-                        .padding(.top, 6)
-
-                    // Events list - max 3 events
+                    // Events list - max 3 for medium, max 6 for large
+                    let maxEvents = family == .systemLarge ? 6 : 3
                     VStack(spacing: 4) {
-                        ForEach(entry.upcomingEvents.prefix(3)) { event in
+                        ForEach(entry.upcomingEvents.prefix(maxEvents)) { event in
                             UpcomingEventRowView(event: event)
                         }
                     }
-                    .padding(.horizontal, 6)
-                    .padding(.bottom, 6)
+                    .padding(.horizontal, family == .systemLarge ? 8 : 6)
+                    .padding(.vertical, family == .systemLarge ? 8 : 6)
                 }
                 .containerBackground(for: .widget) {
-                    LinearGradient(
-                        colors: [firstCategoryColor.opacity(0.2), firstCategoryColor.opacity(0.05)],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    )
+                    Color.black.opacity(0.85)
                 }
             }
         }
@@ -353,7 +284,7 @@ private struct UpcomingEventRowView: View {
 
     var body: some View {
         let categoryColor = categoryColor(for: event.category)
-        let (value, label) = primaryCountdownForList(for: event)
+        let (valueText, label) = primaryCountdownForList(for: event)
 
         HStack(spacing: 8) {
             // Icon in circle
@@ -369,8 +300,10 @@ private struct UpcomingEventRowView: View {
                 Text(event.name)
                     .font(.system(size: 13, weight: .semibold))
                     .foregroundColor(.white)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.8)
+                    .lineLimit(2)
+                    .multilineTextAlignment(.leading)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .minimumScaleFactor(0.7)
 
                 Text(DateFormatter.widgetMonthDay.string(from: event.date))
                     .font(.system(size: 10))
@@ -381,14 +314,16 @@ private struct UpcomingEventRowView: View {
 
             // Countdown value
             HStack(spacing: 2) {
-                Text("\(value)")
+                Text(valueText)
                     .font(.system(size: 18, weight: .bold))
                     .foregroundColor(categoryColor)
                     .minimumScaleFactor(0.7)
 
-                Text(label)
-                    .font(.system(size: 9, weight: .medium))
-                    .foregroundColor(.white.opacity(0.7))
+                if let label {
+                    Text(label)
+                        .font(.system(size: 9, weight: .medium))
+                        .foregroundColor(.white.opacity(0.7))
+                }
             }
         }
         .padding(.horizontal, 8)
@@ -399,154 +334,14 @@ private struct UpcomingEventRowView: View {
 
     private func cardBackgroundColor(for category: EventCategory) -> Color {
         switch category {
-        case .birthday: return Color(red: 0.35, green: 0.25, blue: 0.45) // Dark purple-pink
+        case .birthday: return Color(red: 0.45, green: 0.28, blue: 0.12) // Dark orange
         case .travel: return Color(red: 0.15, green: 0.25, blue: 0.4) // Dark blue
         case .event: return Color(red: 0.3, green: 0.25, blue: 0.4) // Dark purple
         case .wedding: return Color(red: 0.45, green: 0.2, blue: 0.25) // Dark red-pink
-        case .holiday: return Color(red: 0.4, green: 0.3, blue: 0.15) // Dark orange
-        case .anniversary: return Color(red: 0.15, green: 0.4, blue: 0.35) // Dark teal-green
-        case .family: return Color(red: 0.35, green: 0.25, blue: 0.45) // Dark purple-pink
+        case .holiday: return Color(red: 0.22, green: 0.16, blue: 0.08) // Dark brown
+        case .anniversary: return Color(red: 0.45, green: 0.2, blue: 0.35) // Dark pink
+        case .family: return Color(red: 0.15, green: 0.35, blue: 0.25) // Dark green
         case .payment: return Color(red: 0.4, green: 0.35, blue: 0.15) // Dark yellow
-        }
-    }
-}
-
-// MARK: - 3) Category Events Widget (Category-selectable list)
-
-struct CategoryEventsWidget: Widget {
-    let kind: String = "CategoryEventsWidget"
-
-    var body: some WidgetConfiguration {
-        StaticConfiguration(kind: kind, provider: CountdownsProvider()) { entry in
-            CategoryEventsWidgetView(entry: entry)
-        }
-        .configurationDisplayName("Category Events")
-        .description("Shows events filtered by a selected category.")
-        .supportedFamilies([.systemMedium, .systemLarge])
-    }
-}
-
-struct CategoryEventsWidgetView: View {
-    let entry: CountdownsEntry
-    @Environment(\.widgetFamily) var family
-
-    var body: some View {
-        switch family {
-        case .systemMedium:
-            CategoryEventsMediumView(entry: entry)
-        case .systemLarge:
-            CategoryEventsLargeView(entry: entry)
-        default:
-            CategoryEventsMediumView(entry: entry)
-        }
-    }
-}
-
-struct CategoryEventsMediumView: View {
-    let entry: CountdownsEntry
-
-    var body: some View {
-        Group {
-            if let firstEvent = entry.categoryEvents.first {
-                let category = entry.selectedCategory ?? firstEvent.category
-                let categoryColor = categoryColor(for: category)
-                let timeComponents = timeComponents(for: firstEvent)
-                
-                VStack(spacing: 0) {
-                    // Top section: Icon + Event name + Date
-                    HStack(alignment: .top, spacing: 10) {
-                        Image(systemName: category.icon)
-                            .font(.system(size: 14))
-                            .foregroundColor(.white)
-                            .frame(width: 28, height: 28)
-                            .background(categoryColor)
-                            .clipShape(Circle())
-                        
-                        VStack(alignment: .leading, spacing: 1) {
-                            Text(firstEvent.name)
-                                .font(.system(size: 15, weight: .bold))
-                                .foregroundColor(.primary)
-                                .lineLimit(2)
-                                .minimumScaleFactor(0.8)
-                            
-                            Text(DateFormatter.widgetMonthDay.string(from: firstEvent.date))
-                                .font(.system(size: 11))
-                                .foregroundColor(.secondary)
-                        }
-                        
-                        Spacer(minLength: 0)
-                    }
-                    .padding(.horizontal, 8)
-                    .padding(.top, 8)
-                    
-                    Spacer()
-                    
-                    // Bottom section: Countdown breakdown
-                    HStack(spacing: 0) {
-                        CountdownItem(value: timeComponents.days, label: "days", color: categoryColor)
-                        CountdownItem(value: timeComponents.hours, label: "hrs", color: categoryColor)
-                        CountdownItem(value: timeComponents.minutes, label: "min", color: categoryColor)
-                        CountdownItem(value: timeComponents.seconds, label: "sec", color: categoryColor)
-                    }
-                    .padding(.horizontal, 8)
-                    .padding(.bottom, 8)
-                }
-                .containerBackground(for: .widget) {
-                    LinearGradient(
-                        colors: [categoryColor.opacity(0.2), categoryColor.opacity(0.05)],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    )
-                }
-            } else {
-                EmptyStateView(title: "No Events", subtitle: nil)
-                    .containerBackground(for: .widget) {
-                        Color(.systemBackground)
-                    }
-            }
-        }
-    }
-}
-
-struct CategoryEventsLargeView: View {
-    let entry: CountdownsEntry
-
-    var body: some View {
-        Group {
-            if entry.categoryEvents.isEmpty {
-                EmptyStateView(title: "No Events", subtitle: nil)
-                    .containerBackground(for: .widget) {
-                        Color(.systemBackground)
-                    }
-            } else {
-                let firstCategoryColor = categoryColor(for: entry.categoryEvents.first!.category)
-                
-                VStack(alignment: .leading, spacing: 10) {
-                    // Header
-                    Text("UPCOMING EVENTS")
-                        .font(.system(size: 10, weight: .bold))
-                        .foregroundColor(.secondary)
-                        .textCase(.uppercase)
-                        .padding(.horizontal, 10)
-                        .padding(.top, 10)
-                    
-                    // Events list
-                    VStack(spacing: 8) {
-                        ForEach(entry.categoryEvents.prefix(6)) { event in
-                            UpcomingEventRowView(event: event)
-                        }
-                    }
-                    .padding(.horizontal, 10)
-                    .padding(.bottom, 10)
-                }
-                .containerBackground(for: .widget) {
-                    LinearGradient(
-                        colors: [firstCategoryColor.opacity(0.2), firstCategoryColor.opacity(0.05)],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    )
-                }
-            }
         }
     }
 }
@@ -596,7 +391,9 @@ private struct EventRowView: View {
                 Text(event.name)
                     .font(.system(size: 14, weight: .medium))
                     .foregroundColor(.primary)
-                    .lineLimit(1)
+                    .lineLimit(2)
+                    .multilineTextAlignment(.leading)
+                    .fixedSize(horizontal: false, vertical: true)
 
                 Text(DateFormatter.widgetMonthDay.string(from: event.date))
                     .font(.system(size: 11))
@@ -684,9 +481,9 @@ private func daysRemaining(for event: Event) -> Int {
     return seconds / 86_400
 }
 
-private func primaryCountdown(for event: Event) -> (value: Int, label: String) {
+private func primaryCountdown(for event: Event) -> (valueText: String, label: String?) {
     let seconds = Int(event.timeRemaining)
-    guard seconds > 0 else { return (0, "days") }
+    guard seconds > 0 else { return (NSLocalizedString("Today", comment: ""), nil) }
     
     let days = seconds / 86_400
     let hours = (seconds % 86_400) / 3_600
@@ -694,21 +491,35 @@ private func primaryCountdown(for event: Event) -> (value: Int, label: String) {
     
     // Önce gün göster
     if days > 0 {
-        return (days, days == 1 ? "day" : "days")
+        let label = days == 1
+            ? NSLocalizedString("day", comment: "")
+            : NSLocalizedString("days", comment: "")
+        return ("\(days)", label)
     }
-    
+
+    // Aynı günse "Today"
+    if Calendar.current.isDateInToday(event.date) {
+        return (NSLocalizedString("Today", comment: ""), nil)
+    }
+
     // Gün yoksa saat göster
     if hours > 0 {
-        return (hours, hours == 1 ? "hour" : "hours")
+        let label = hours == 1
+            ? NSLocalizedString("hour", comment: "")
+            : NSLocalizedString("hours", comment: "")
+        return ("\(hours)", label)
     }
     
     // Saat yoksa dakika göster
-    return (minutes, minutes == 1 ? "minute" : "minutes")
+    let label = minutes == 1
+        ? NSLocalizedString("minute", comment: "")
+        : NSLocalizedString("minutes", comment: "")
+    return ("\(minutes)", label)
 }
 
-private func primaryCountdownForList(for event: Event) -> (value: Int, label: String) {
+private func primaryCountdownForList(for event: Event) -> (valueText: String, label: String?) {
     let seconds = Int(event.timeRemaining)
-    guard seconds > 0 else { return (0, "days") }
+    guard seconds > 0 else { return (NSLocalizedString("Today", comment: ""), nil) }
     
     let days = seconds / 86_400
     let hours = (seconds % 86_400) / 3_600
@@ -716,16 +527,21 @@ private func primaryCountdownForList(for event: Event) -> (value: Int, label: St
     
     // Önce gün göster
     if days > 0 {
-        return (days, "days")
+        return ("\(days)", NSLocalizedString("days", comment: ""))
     }
-    
+
+    // Aynı günse "Today"
+    if Calendar.current.isDateInToday(event.date) {
+        return (NSLocalizedString("Today", comment: ""), nil)
+    }
+
     // Gün yoksa saat göster
     if hours > 0 {
-        return (hours, "hrs")
+        return ("\(hours)", NSLocalizedString("hrs", comment: ""))
     }
     
     // Saat yoksa dakika göster
-    return (minutes, "min")
+    return ("\(minutes)", NSLocalizedString("min", comment: ""))
 }
 
 // MARK: - Category Color Helper
@@ -733,12 +549,12 @@ private func primaryCountdownForList(for event: Event) -> (value: Int, label: St
 private func categoryColor(for category: EventCategory) -> Color {
     switch category {
     case .event: return Color.purple
-    case .birthday: return Color.pink
+    case .birthday: return Color(red: 1.0, green: 0.6, blue: 0.25) // Light orange
     case .travel: return Color.blue
     case .wedding: return Color.red
-        case .holiday: return Color(red: 0.4, green: 0.3, blue: 0.2) // Brown
-    case .anniversary: return Color.green
-    case .family: return Color.pink.opacity(0.7) // Lighter pink
+    case .holiday: return Color(red: 0.4, green: 0.3, blue: 0.2) // Brown
+    case .anniversary: return Color.pink.opacity(0.7) // Lighter pink
+    case .family: return Color.green
     case .payment: return Color.yellow
     }
 }

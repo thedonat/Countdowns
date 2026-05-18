@@ -11,6 +11,7 @@ import Combine
 struct EventDetailView: View {
     @Environment(\.presentationMode) var presentationMode
     @EnvironmentObject var eventStore: EventStore
+    @Environment(\.colorScheme) var colorScheme
     
     let event: Event
     @State private var eventName: String
@@ -21,6 +22,15 @@ struct EventDetailView: View {
     @State private var showDeleteAlert = false
     @State private var showSaveConfirm = false
     @State private var timeRemaining: TimeInterval = 0
+    @State private var showNameError = false
+
+    private var inputBackgroundColor: Color {
+        colorScheme == .dark ? Color(.systemGray6) : Color(.systemGray6).opacity(0.6)
+    }
+
+    private var unselectedCategoryBackgroundColor: Color {
+        colorScheme == .dark ? Color(.systemGray6) : Color(.systemGray6).opacity(0.6)
+    }
     
     init(event: Event) {
         self.event = event
@@ -48,14 +58,20 @@ struct EventDetailView: View {
                         EventCountdownBox(value: seconds, label: "Secs", color: categoryColor)
                     }
                     .padding(.horizontal)
-                } else {
-                    Text("Today")
-                        .font(.title)
-                        .fontWeight(.bold)
-                        .foregroundColor(categoryColor)
-                        .padding()
+                } else if Calendar.current.isDateInToday(event.date) {
+                    HStack(spacing: 8) {
+                        Image(systemName: "play.circle.fill")
+                            .font(.system(size: 22))
+                            .foregroundColor(categoryColor)
+                        
+                        Text(LocalizationManager.localizedFormat("Started at %@", DateFormatter.abbreviatedTime.string(from: event.date)))
+                            .font(.title2)
+                            .fontWeight(.bold)
+                            .foregroundColor(categoryColor)
+                    }
+                    .padding()
                 }
-                
+
                 // Event Name
                 VStack(alignment: .leading, spacing: 8) {
                     Text("Event Name")
@@ -65,12 +81,15 @@ struct EventDetailView: View {
                     TextField("Event Name", text: $eventName)
                         .textFieldStyle(.plain)
                         .padding()
-                        .background(Color(.systemGray6))
-                        .cornerRadius(12)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 12)
-                                .stroke(Color(.systemGray4), lineWidth: 1)
-                        )
+                    .background(inputBackgroundColor)
+                    .cornerRadius(12)
+                    .disabled(!canEdit)
+
+                    if showNameError {
+                        Text(LocalizedStringKey(LocalizationManager.localizedString("Event name cannot be empty")))
+                            .font(.caption)
+                            .foregroundColor(.red)
+                    }
                 }
                 .padding(.horizontal)
                 
@@ -80,22 +99,29 @@ struct EventDetailView: View {
                         .font(.headline)
                         .foregroundColor(.primary)
                     
-                    DatePicker(
-                        "",
-                        selection: $selectedDate,
-                        in: Date()...,
-                        displayedComponents: [.date, .hourAndMinute]
-                    )
+                    Group {
+                        if canEdit {
+                            DatePicker(
+                                "",
+                                selection: $selectedDate,
+                                in: Date()...,
+                                displayedComponents: [.date, .hourAndMinute]
+                            )
+                        } else {
+                            DatePicker(
+                                "",
+                                selection: $selectedDate,
+                                displayedComponents: [.date, .hourAndMinute]
+                            )
+                        }
+                    }
                     .datePickerStyle(.compact)
                     .labelsHidden()
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding()
-                    .background(Color(.secondarySystemBackground))
+                    .background(inputBackgroundColor)
                     .cornerRadius(12)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 12)
-                            .stroke(Color(.systemGray4), lineWidth: 1)
-                    )
+                    .disabled(!canEdit)
                 }
                 .padding(.horizontal)
                 
@@ -108,24 +134,26 @@ struct EventDetailView: View {
                     
                     VStack(spacing: 12) {
                         HStack(spacing: 12) {
-                            ForEach(Array(EventCategory.allCases.prefix(5))) { category in
+                            ForEach(Array(EventCategory.allCases.prefix(4))) { category in
                                 EventCategoryButton(
                                     category: category,
                                     isSelected: selectedCategory == category
                                 ) {
                                     selectedCategory = category
                                 }
+                                .disabled(!canEdit)
                             }
                         }
 
                         HStack(spacing: 12) {
-                            ForEach(Array(EventCategory.allCases.dropFirst(5))) { category in
+                            ForEach(Array(EventCategory.allCases.dropFirst(4))) { category in
                                 EventCategoryButton(
                                     category: category,
                                     isSelected: selectedCategory == category
                                 ) {
                                     selectedCategory = category
                                 }
+                                .disabled(!canEdit)
                             }
                         }
                     }
@@ -143,16 +171,13 @@ struct EventDetailView: View {
                             .foregroundColor(.gray)
                             .font(.system(size: 16))
 
-                        TextField("Add location...", text: $location)
+                    TextField("Add location...", text: $location)
                             .textFieldStyle(.plain)
                     }
                     .padding()
-                    .background(Color(.systemGray6))
+                    .background(inputBackgroundColor)
                     .cornerRadius(12)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 12)
-                            .stroke(Color(.systemGray4), lineWidth: 1)
-                    )
+                    .disabled(!canEdit)
                 }
                 .padding(.horizontal)
 
@@ -166,26 +191,30 @@ struct EventDetailView: View {
                         .textFieldStyle(.plain)
                         .lineLimit(3...6)
                         .padding()
-                        .background(Color(.systemGray6))
-                        .cornerRadius(12)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 12)
-                                .stroke(Color(.systemGray4), lineWidth: 1)
-                        )
+                    .background(inputBackgroundColor)
+                    .cornerRadius(12)
+                    .disabled(!canEdit)
                 }
                 .padding(.horizontal)
             }
             .padding(.vertical)
         }
+        .simultaneousGesture(
+            TapGesture().onEnded { _ in
+                UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+            }
+        )
         .navigationTitle("Event Details")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
-            ToolbarItem(placement: .navigationBarTrailing) {
-                Button("Save") {
-                    showSaveConfirm = true
+            if canEdit {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Save") {
+                        showSaveConfirm = true
+                    }
+                    .fontWeight(.semibold)
+                    .foregroundColor(.blue)
                 }
-                .fontWeight(.semibold)
-                .foregroundColor(.blue)
             }
             
             ToolbarItem(placement: .navigationBarLeading) {
@@ -204,7 +233,7 @@ struct EventDetailView: View {
                 presentationMode.wrappedValue.dismiss()
             }
         } message: {
-            Text("Are you sure you want to delete \"\(event.name)\"? This action cannot be undone.")
+            Text(LocalizationManager.localizedFormat("Are you sure you want to delete \"%@\"? This action cannot be undone.", event.name))
         }
         .alert("Save Changes?", isPresented: $showSaveConfirm) {
             Button("Cancel", role: .cancel) { }
@@ -220,6 +249,11 @@ struct EventDetailView: View {
         .onReceive(Timer.publish(every: 1, on: .main, in: .common).autoconnect()) { _ in
             updateTimeRemaining()
         }
+        .onChange(of: eventName) { _ in
+            if showNameError {
+                showNameError = false
+            }
+        }
     }
     
     private func saveEvent() {
@@ -227,40 +261,40 @@ struct EventDetailView: View {
         let trimmedNotes = notes.trimmingCharacters(in: .whitespacesAndNewlines)
         let trimmedLocation = location.trimmingCharacters(in: .whitespacesAndNewlines)
 
-        if !trimmedName.isEmpty {
-            var updatedEvent = event
-            updatedEvent.name = trimmedName
-            updatedEvent.date = selectedDate
-            updatedEvent.category = selectedCategory
-            updatedEvent.notes = trimmedNotes.isEmpty ? nil : trimmedNotes
-            updatedEvent.location = trimmedLocation.isEmpty ? nil : trimmedLocation
-
-            eventStore.updateEvent(updatedEvent)
-            presentationMode.wrappedValue.dismiss()
+        guard !trimmedName.isEmpty else {
+            showNameError = true
+            return
         }
+
+        var updatedEvent = event
+        updatedEvent.name = trimmedName
+        updatedEvent.date = selectedDate
+        updatedEvent.category = selectedCategory
+        updatedEvent.notes = trimmedNotes.isEmpty ? nil : trimmedNotes
+        updatedEvent.location = trimmedLocation.isEmpty ? nil : trimmedLocation
+
+        eventStore.updateEvent(updatedEvent)
+        presentationMode.wrappedValue.dismiss()
     }
     
     private func updateTimeRemaining() {
         timeRemaining = event.date.timeIntervalSinceNow
     }
+
+    private var canEdit: Bool {
+        return event.date >= Date()
+    }
+
+
     
     private var categoryColor: Color {
-        switch selectedCategory {
-        case .event: return Color.purple
-        case .birthday: return Color.pink
-        case .travel: return Color.blue
-        case .wedding: return Color.red
-        case .holiday: return Color(red: 0.4, green: 0.3, blue: 0.2) // Brown
-        case .anniversary: return Color.green
-        case .family: return Color.pink.opacity(0.7) // Lighter pink
-        case .payment: return Color.yellow
-        }
+        selectedCategory.displayColor
     }
 }
 
 struct EventCountdownBox: View {
     let value: Int
-    let label: String
+    let label: LocalizedStringKey
     let color: Color
     
     var body: some View {
@@ -284,15 +318,20 @@ struct EventCategoryButton: View {
     let category: EventCategory
     let isSelected: Bool
     let action: () -> Void
+    @Environment(\.colorScheme) var colorScheme
+
+    private var unselectedCategoryBackgroundColor: Color {
+        colorScheme == .dark ? Color(.systemGray6) : Color(.systemGray6).opacity(0.6)
+    }
     
     var body: some View {
         Button(action: action) {
             VStack(spacing: 8) {
                 Image(systemName: category.icon)
                     .font(.system(size: 24))
-                    .foregroundColor(isSelected ? .white : categoryColor)
+                    .foregroundColor(isSelected ? .white : category.displayColor)
                 
-                Text(category.rawValue)
+                Text(category.localizedName)
                     .font(.caption)
                     .foregroundColor(isSelected ? .white : .primary)
                     .lineLimit(1)
@@ -303,31 +342,18 @@ struct EventCategoryButton: View {
                 Group {
                     if isSelected {
                         LinearGradient(
-                            colors: [Color.purple, Color.blue],
+                            colors: [category.displayColor.opacity(0.8), category.displayColor.opacity(0.6)],
                             startPoint: .topLeading,
                             endPoint: .bottomTrailing
                         )
                     } else {
-                        Color(.systemGray5)
+                        unselectedCategoryBackgroundColor
                     }
                 }
             )
             .cornerRadius(12)
         }
         .buttonStyle(PlainButtonStyle())
-    }
-    
-    private var categoryColor: Color {
-        switch category {
-        case .birthday: return Color.pink
-        case .travel: return Color.blue
-        case .event: return Color.purple
-        case .wedding: return Color.red
-        case .holiday: return Color.orange
-        case .anniversary: return Color.green
-        case .family: return Color.pink
-        case .payment: return Color.yellow
-        }
     }
 }
 

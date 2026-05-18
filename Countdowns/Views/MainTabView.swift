@@ -43,6 +43,7 @@ struct MainTabView: View {
             
             SettingsView()
                 .environmentObject(themeManager)
+                .environmentObject(eventStore)
                 .tabItem {
                     Image(systemName: "gearshape")
                     Text("Settings")

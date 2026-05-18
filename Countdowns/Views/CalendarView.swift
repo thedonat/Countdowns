@@ -13,8 +13,16 @@ struct CalendarView: View {
     @EnvironmentObject var themeManager: ThemeManager
     @State private var selectedDate = Date()
     @State private var currentMonth = Date()
+    @State private var calendarRefreshID = UUID()
 
-    private let calendar = Calendar.current
+    @AppStorage("weekStart") private var weekStart: Int = 2
+
+    private var calendar: Calendar {
+        var calendar = Calendar.current
+        calendar.locale = Locale(identifier: LocalizationManager.currentLanguageCode())
+        calendar.firstWeekday = weekStart
+        return calendar
+    }
 
     private func eventsForSelectedDate() -> [Event] {
         return eventStore.events.filter { event in
@@ -30,7 +38,7 @@ struct CalendarView: View {
                     VStack(spacing: 16) {
                         // Month Header
                         HStack {
-                            Text(DateFormatter.monthYear.string(from: currentMonth))
+                            Text(monthYearString(for: currentMonth))
                                 .font(.title2)
                                 .fontWeight(.bold)
                             
@@ -62,7 +70,9 @@ struct CalendarView: View {
                         CalendarGridView(
                             month: currentMonth,
                             selectedDate: $selectedDate,
-                            events: eventStore.events
+                            events: eventStore.events,
+                            weekStart: weekStart,
+                            refreshID: $calendarRefreshID
                         )
                     }
                     .padding()
@@ -72,7 +82,7 @@ struct CalendarView: View {
 
                     // Selected Date Events
                     VStack(alignment: .leading, spacing: 16) {
-                        Text("\(DateFormatter.monthDay.string(from: selectedDate)) Events")
+                        Text(LocalizationManager.localizedFormat("%@ Events", monthDayString(for: selectedDate)))
                             .font(.title2)
                             .fontWeight(.bold)
                             .padding(.horizontal)
@@ -80,14 +90,18 @@ struct CalendarView: View {
                         let selectedEvents = eventsForSelectedDate()
 
                         if selectedEvents.isEmpty {
-                            Text("No events on this date")
+                            Text(LocalizedStringKey(LocalizationManager.localizedString("No events on this date")))
                                 .font(.subheadline)
                                 .foregroundColor(.secondary)
                                 .padding(.horizontal)
                         } else {
                             LazyVStack(spacing: 12) {
                                 ForEach(selectedEvents) { event in
-                                    SelectedDateEventRow(event: event)
+                                    NavigationLink(destination: EventDetailView(event: event)
+                                        .environmentObject(eventStore)) {
+                                        SelectedDateEventRow(event: event)
+                                    }
+                                    .buttonStyle(PlainButtonStyle())
                                 }
                             }
                             .padding(.horizontal)
@@ -96,9 +110,26 @@ struct CalendarView: View {
                 }
                 .padding()
             }
-            .navigationTitle("Calendar")
+            .navigationTitle(LocalizedStringKey(LocalizationManager.localizedString("Calendar")))
             .navigationBarTitleDisplayMode(.large)
         }
+        .onChange(of: weekStart) { _ in
+            calendarRefreshID = UUID()
+        }
+    }
+
+    private func monthYearString(for date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "MMMM yyyy"
+        formatter.locale = Locale(identifier: LocalizationManager.currentLanguageCode())
+        return formatter.string(from: date)
+    }
+
+    private func monthDayString(for date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "MMM d"
+        formatter.locale = Locale(identifier: LocalizationManager.currentLanguageCode())
+        return formatter.string(from: date)
     }
 }
 
@@ -106,9 +137,20 @@ struct CalendarGridView: View {
     let month: Date
     @Binding var selectedDate: Date
     let events: [Event]
+    let weekStart: Int
+    @Binding var refreshID: UUID
     
-    private let calendar = Calendar.current
-    private let weekdays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
+    private var calendar: Calendar {
+        var calendar = Calendar.current
+        calendar.locale = Locale(identifier: LocalizationManager.currentLanguageCode())
+        calendar.firstWeekday = weekStart
+        return calendar
+    }
+    private var weekdays: [String] {
+        let symbols = calendar.shortWeekdaySymbols
+        let startIndex = max(0, min(symbols.count - 1, weekStart - 1))
+        return Array(symbols[startIndex...] + symbols[..<startIndex])
+    }
     
     var body: some View {
         VStack(spacing: 8) {
@@ -138,6 +180,7 @@ struct CalendarGridView: View {
                 }
             }
         }
+        .id(refreshID)
     }
     
     private func daysInMonth() -> [Date] {
@@ -308,16 +351,7 @@ struct SelectedDateEventRow: View {
     }
 
     private var categoryColor: Color {
-        switch event.category {
-        case .event: return Color.purple
-        case .birthday: return Color.pink
-        case .travel: return Color.blue
-        case .wedding: return Color.red
-        case .holiday: return Color(red: 0.4, green: 0.3, blue: 0.2) // Brown
-        case .anniversary: return Color.green
-        case .family: return Color.pink.opacity(0.7) // Lighter pink
-        case .payment: return Color.yellow
-        }
+        event.category.displayColor
     }
 }
 

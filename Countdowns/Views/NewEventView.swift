@@ -10,6 +10,7 @@ import SwiftUI
 struct NewEventView: View {
     @Environment(\.presentationMode) var presentationMode
     @EnvironmentObject var eventStore: EventStore
+    @Environment(\.colorScheme) var colorScheme
     
     @State private var eventName = ""
     @State private var notes = ""
@@ -19,13 +20,21 @@ struct NewEventView: View {
     @State private var showNameError = false
     @State private var currentPlaceholderIndex = 0
     @State private var placeholderTimer: Timer?
+
+    private var inputBackgroundColor: Color {
+        FormColors.inputBackground(for: colorScheme)
+    }
+
+    private var unselectedCategoryBackgroundColor: Color {
+        FormColors.unselectedCategoryBackground(for: colorScheme)
+    }
     
     private let placeholders = [
-        ("🎂", "John's Birthday"),
-        ("✈️", "Trip to Norway"),
-        ("💍", "Wedding Anniversary"),
-        ("🎉", "New Year Party"),
-        ("🎓", "Graduation Day")
+        ("🎂", LocalizationManager.localizedString("John's Birthday")),
+        ("✈️", LocalizationManager.localizedString("Trip to Norway")),
+        ("💍", LocalizationManager.localizedString("Wedding Anniversary")),
+        ("🎉", LocalizationManager.localizedString("New Year Party")),
+        ("🎓", LocalizationManager.localizedString("Graduation Day"))
     ]
     
     var body: some View {
@@ -82,12 +91,8 @@ struct NewEventView: View {
                                 .textFieldStyle(.plain)
                                 .padding()
                         }
-                        .background(Color(.systemGray4).opacity(0.6))
+                        .background(inputBackgroundColor)
                         .cornerRadius(12)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 12)
-                                .stroke(Color(.systemGray4), lineWidth: 1)
-                        )
                         
                         if showNameError {
                             Text("Event name cannot be empty")
@@ -107,12 +112,8 @@ struct NewEventView: View {
                             .textFieldStyle(.plain)
                             .lineLimit(3...6)
                             .padding()
-                            .background(Color(.systemGray4).opacity(0.6))
+                            .background(inputBackgroundColor)
                             .cornerRadius(12)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 12)
-                                    .stroke(Color(.systemGray4), lineWidth: 1)
-                            )
                     }
                     .padding(.horizontal)
 
@@ -131,12 +132,8 @@ struct NewEventView: View {
                                 .textFieldStyle(.plain)
                         }
                         .padding()
-                        .background(Color(.systemGray4).opacity(0.6))
+                        .background(inputBackgroundColor)
                         .cornerRadius(12)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 12)
-                                .stroke(Color(.systemGray4), lineWidth: 1)
-                        )
                     }
                     .padding(.horizontal)
 
@@ -156,12 +153,8 @@ struct NewEventView: View {
                         .labelsHidden()
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .padding()
-                        .background(Color(.systemGray4).opacity(0.6))
+                        .background(inputBackgroundColor)
                         .cornerRadius(12)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 12)
-                                .stroke(Color(.systemGray4), lineWidth: 1)
-                        )
                     }
                     .padding(.horizontal)
                     
@@ -174,7 +167,7 @@ struct NewEventView: View {
                         
                         VStack(spacing: 12) {
                             HStack(spacing: 12) {
-                                ForEach(Array(EventCategory.allCases.prefix(5))) { category in
+                                ForEach(Array(EventCategory.allCases.prefix(4))) { category in
                                     CategoryButton(
                                         category: category,
                                         isSelected: selectedCategory == category
@@ -185,7 +178,7 @@ struct NewEventView: View {
                             }
 
                             HStack(spacing: 12) {
-                                ForEach(Array(EventCategory.allCases.dropFirst(5))) { category in
+                                ForEach(Array(EventCategory.allCases.dropFirst(4))) { category in
                                     CategoryButton(
                                         category: category,
                                         isSelected: selectedCategory == category
@@ -285,21 +278,23 @@ struct NewEventView: View {
         placeholderTimer?.invalidate()
         placeholderTimer = nil
     }
+
 }
 
 struct CategoryButton: View {
     let category: EventCategory
     let isSelected: Bool
     let action: () -> Void
+    @Environment(\.colorScheme) var colorScheme
     
     var body: some View {
         Button(action: action) {
             VStack(spacing: 8) {
                 Image(systemName: category.icon)
                     .font(.system(size: 24))
-                    .foregroundColor(isSelected ? .white : categoryColor)
+                    .foregroundColor(isSelected ? .white : category.displayColor)
                 
-                Text(category.rawValue)
+                Text(category.localizedName)
                     .font(.caption)
                     .foregroundColor(isSelected ? .white : .primary)
                     .lineLimit(1)
@@ -310,12 +305,12 @@ struct CategoryButton: View {
                 Group {
                     if isSelected {
                         LinearGradient(
-                            colors: [categoryColor.opacity(0.8), categoryColor.opacity(0.6)],
+                            colors: [category.displayColor.opacity(0.8), category.displayColor.opacity(0.6)],
                             startPoint: .topLeading,
                             endPoint: .bottomTrailing
                         )
                     } else {
-                        Color(.systemGray5)
+                        FormColors.unselectedCategoryBackground(for: colorScheme)
                     }
                 }
             )
@@ -324,18 +319,6 @@ struct CategoryButton: View {
         .buttonStyle(PlainButtonStyle())
     }
     
-    private var categoryColor: Color {
-        switch category {
-        case .event: return Color.purple
-        case .birthday: return Color.pink
-        case .travel: return Color.blue
-        case .wedding: return Color.red
-        case .holiday: return Color(red: 0.4, green: 0.3, blue: 0.2) // Brown
-        case .anniversary: return Color.green
-        case .family: return Color.pink.opacity(0.7) // Lighter pink
-        case .payment: return Color.yellow
-        }
-    }
 }
 
 #Preview {

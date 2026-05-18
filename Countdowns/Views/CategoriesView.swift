@@ -47,11 +47,11 @@ struct CategoryCard: View {
                 .background(categoryColor.opacity(0.2))
                 .clipShape(RoundedRectangle(cornerRadius: 12))
             
-            Text(category.rawValue)
+            Text(category.localizedName)
                 .font(.headline)
                 .foregroundColor(.primary)
             
-            Text("\(count) event\(count == 1 ? "" : "s")")
+            Text(eventCountText(count))
                 .font(.caption)
                 .foregroundColor(.secondary)
             
@@ -83,16 +83,14 @@ struct CategoryCard: View {
     }
     
     private var categoryColor: Color {
-        switch category {
-        case .event: return Color.purple
-        case .birthday: return Color.pink
-        case .travel: return Color.blue
-        case .wedding: return Color.red
-        case .holiday: return Color(red: 0.4, green: 0.3, blue: 0.2) // Brown
-        case .anniversary: return Color.green
-        case .family: return Color.pink.opacity(0.7) // Lighter pink
-        case .payment: return Color.yellow
+        category.displayColor
+    }
+
+    private func eventCountText(_ count: Int) -> String {
+        if count == 1 {
+            return LocalizationManager.localizedString("1 event")
         }
+        return LocalizationManager.localizedFormat("%d events", count)
     }
 }
 
