@@ -21,5 +21,6 @@ jobs:
           xcodebuild \
             -project Countdowns.xcodeproj \
             -scheme Countdowns \
-            -destination 'platform=iOS Simulator,name=iPhone 15' \
+            -destination 'generic/platform=iOS Simulator' \
+            CODE_SIGNING_ALLOWED=NO \
             clean build
